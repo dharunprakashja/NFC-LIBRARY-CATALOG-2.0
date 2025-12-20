@@ -1,0 +1,107 @@
+### NFC Data Test - Student
+POST http://localhost:5000/attendance
+Content-Type: application/json
+
+{
+  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063 Mobile: 6374406703"
+}
+
+### NFC Data Test - Book
+POST http://localhost:5000/nfc
+Content-Type: application/json
+
+{
+  "nfc_data": "Book Details title: \"The Enchanted Forest\" author: \"Ava Green\" genre: \"Fantasy\""
+}
+
+
+
+### NFC Data Test - Book
+POST http://localhost:5000/nfc
+Content-Type: application/json
+
+{
+  "nfc_data": "Book Details title: \"Introduction to AI\" author: \"John Doe\" genre: \"Technology\""
+}
+
+### NFC Data Test - Unrecognized Data
+POST http://localhost:5000/nfc
+Content-Type: application/json
+
+{
+  "nfc_data": "Unknown Details title: \"Some title\" author: \"Unknown Author\" genre: \"Unknown Genre\""
+}
+
+### SIGNIN
+POST http://localhost:5000/signin
+Content-Type: application/json
+
+{
+    "username":"dp",
+    "password":"0000"
+}
+
+### Session selector 
+POST http://localhost:5000/library/select-action
+Content-Type: application/json
+
+{
+  "action": "borrow"
+  
+}
+
+### NFC Data Test - Book
+POST http://localhost:5000/library
+Content-Type: application/json
+
+ {
+  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063 Mobile:2017351973"
+
+}
+
+### NFC Data Test - Book
+POST http://localhost:5000/library
+Content-Type: application/json
+
+{
+  "nfc_data": "Book Details book_id:BK018 title:Design Patterns in Software author:Jason Moore genre:Programming"
+}
+### Close the active session
+POST http://localhost:5000/library/stop-session
+Content-Type: application/json
+
+### GET Students
+GET http://localhost:5000/students
+
+### GET Books
+GET http://localhost:5000/books
+
+### GET INDIDUAL STUDENT DETAILS 
+
+GET http://localhost:5000/students/22AD063
+
+### MANUAL FINR UPDATE 
+POST http://localhost:5000/students/update-fines
+
+### Test Gemini AI API
+POST http://localhost:5000/gemini/
+Content-Type: application/json
+
+{
+  "prompt": "Summarize 'The Great Gatsby' by F. Scott Fitzgerald."
+}
+
+######################
+
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBrulOorXX01nH0VVkCV6Ts6hK64EGxyBU" \
+-H 'Content-Type: application/json' \
+-X POST \
+-d '{
+  "contents": [{
+    "parts":[{"text": "Explain how AI works"}]
+    }]
+   }'
+
+
+
+
