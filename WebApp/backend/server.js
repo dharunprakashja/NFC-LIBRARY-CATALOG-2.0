@@ -10,11 +10,15 @@ const attendanceRoutes = require('./routes/attendance');
 const geminiRoutes = require('./routes/gemini');
 const signInRoutes = require('./routes/signin');
 const libraryRoutes = require('./routes/library');
-const bookRoutes = require('./routes/books'); // Import Book routes
-const studentRoutes = require('./routes/students'); // Import Student routes
+const bookRoutes = require('./routes/book_crud'); // Import Book routes
+const studentRoutes = require('./routes/account_crud'); // Import Student routes
 const updateAllStudentsFines = require('./cron/fineUpdater'); // Import fine updater
 const morgan = require('morgan'); // Logging middleware
 const cron = require('node-cron'); // Cron job scheduling
+const path = require('path');
+const admingeminiRoute = require('./routes/admin_ai'); // Import Gemini AI routes for admin
+const usergeminiRoute = require('./routes/user_ai'); // Import Gemini AI routes for users
+
 
 
 const app = express();
@@ -29,8 +33,8 @@ app.use(express.json());
 app.use(morgan('dev')); // Logs HTTP requests
 // Add this line to include the route
 app.use('/students', studentRoutes);
-
-// MongoDB Connection
+app.use('/image',express.static(path.join(__dirname, 'image'))
+);// MongoDB Connection
 connectDB(); // Connect to the MongoDB database
 
 // Attach Socket.IO to req for WebSocket support in routes
@@ -41,11 +45,14 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use('/attendance', attendanceRoutes);
-app.use('/signin', signInRoutes);
+app.use('/account', signInRoutes);
 app.use('/library', libraryRoutes);
-app.use('/books', bookRoutes); // Add Book routes
+app.use('/book', bookRoutes); // Add Book routes
 app.use('/students', studentRoutes); // Add Student routes
-app.use('/gemini', geminiRoutes); // Add Gemini AI routes
+app.use('/admin_ai', admingeminiRoute);
+app.use('/user_ai', usergeminiRoute);
+
+
 
 // Global Error Handler
 app.use((err, req, res, next) => {

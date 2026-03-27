@@ -3,17 +3,16 @@ POST http://localhost:5000/attendance
 Content-Type: application/json
 
 {
-  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063 Mobile: 6374406703"
+  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063"
 }
 
-### NFC Data Test - Book
+### NFC Data Test - Book (UPDATED)
 POST http://localhost:5000/nfc
 Content-Type: application/json
 
 {
-  "nfc_data": "Book Details title: \"The Enchanted Forest\" author: \"Ava Green\" genre: \"Fantasy\""
+  "nfc_data": "Book Details book_id: \"BK001\" title: \"The Great Gatsby\" author: \"F. Scott Fitzgerald\" genre: \"Classic Fiction\""
 }
-
 
 
 ### NFC Data Test - Book
@@ -54,18 +53,19 @@ Content-Type: application/json
 POST http://localhost:5000/library
 Content-Type: application/json
 
- {
-  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063 Mobile:2017351973"
-
+{
+  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063"
 }
+
 
 ### NFC Data Test - Book
 POST http://localhost:5000/library
 Content-Type: application/json
 
 {
-  "nfc_data": "Book Details book_id:BK018 title:Design Patterns in Software author:Jason Moore genre:Programming"
+  "nfc_data": "Book Details book_id: \"BK001\" title: \"The Great Gatsby\" author: \"F. Scott Fitzgerald\" genre: \"Classic Fiction\""
 }
+
 ### Close the active session
 POST http://localhost:5000/library/stop-session
 Content-Type: application/json

@@ -5,9 +5,9 @@
 #define RST_PIN 9  // Configurable pin
 #define SS_PIN 10  // Configurable pin
 
-const char* ssid = "Prakash's S23";         // Replace with your Wi-Fi SSID
-const char* password = "123456789";        // Replace with your Wi-Fi password
-  const char* serverIP = " 192.168.43.102";     // Backend server's IP address
+const char* ssid = "DHAROO'S23";         // Replace with your Wi-Fi SSID
+const char* password = "12345678";        // Replace with your Wi-Fi password
+  const char* serverIP = "10.207.80.102";     // Backend server's IP address
 const int serverPort = 5000;               // Backend server port
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance

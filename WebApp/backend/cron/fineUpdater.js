@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const Student = require('../models/Student');
+const Student = require('../models/account');
 
 // Function to update fines for all students
 async function updateAllStudentsFines() {

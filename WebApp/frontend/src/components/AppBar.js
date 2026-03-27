@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ── Session helpers ────────────────────────────────────────────────────────────
@@ -99,7 +99,20 @@ const styles = `
   .ab-avatar-initials {
     font-size: 13px;
     font-weight: 600;
-    color: #555;
+    color: #fff;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  /* Initials background circle */
+  .ab-initials-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a1a2e, #4a4a8a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* ── Drawer overlay ── */
@@ -155,7 +168,18 @@ const styles = `
   .ab-drawer-avatar-initials {
     font-size: 16px;
     font-weight: 600;
-    color: #555;
+    color: #fff;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .ab-drawer-initials-circle {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e, #4a4a8a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .ab-drawer-name {
@@ -306,17 +330,6 @@ const styles = `
 `;
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
-const Icon = ({ d, d2, circle, rect, line, path2 }) => (
-  <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {d && <path d={d} />}
-    {d2 && <path d={d2} />}
-    {circle && <circle cx={circle.cx} cy={circle.cy} r={circle.r} />}
-    {rect && <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={rect.rx} />}
-    {line && <line x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />}
-    {path2 && <path d={path2} />}
-  </svg>
-);
-
 const Icons = {
   Menu: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -378,28 +391,78 @@ const Icons = {
   ),
 };
 
-// ── Avatar helper ─────────────────────────────────────────────────────────────
-function Avatar({ name, src, size = 36, fontSize = 13 }) {
-  const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : "?";
-  return src ? (
-    <img src={src} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />
-  ) : (
-    <span style={{ fontSize, fontWeight: 600, color: '#555' }}>{initials}</span>
+// ── Get first letter of name ───────────────────────────────────────────────────
+function getInitial(name) {
+  if (!name) return "?";
+  return name.trim().charAt(0).toUpperCase();
+}
+
+// ── Avatar Component ───────────────────────────────────────────────────────────
+// Shows profile image if available, otherwise shows first letter of name
+function Avatar({ name, src, size = 36, fontSize = 15 }) {
+  const [imgError, setImgError] = useState(false);
+  const initial = getInitial(name);
+
+  // Reset error state if src changes
+  useEffect(() => { setImgError(false); }, [src]);
+
+  if (src && !imgError) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #1a1a2e, #4a4a8a)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ fontSize, fontWeight: 700, color: '#fff', userSelect: 'none', letterSpacing: '0.02em' }}>
+        {initial}
+      </span>
+    </div>
   );
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AppBarComponent = ({ children }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen]   = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
   const navigate = useNavigate();
 
   // Read from sessionStorage
-  const name         = session.get("name");
-  const rollNo       = session.get("roll_no");
-  const department   = session.get("department");
-  const profileImage = session.get("profile_image");
-  const isAdmin      = session.isAdmin();
+  const name       = session.get("name");
+  const rollNo     = session.get("roll_no");
+  const department = session.get("department");
+  const isAdmin    = session.isAdmin();
+
+  // ── Fetch profile image on mount ───────────────────────────────────────────
+  useEffect(() => {
+    const storedImage = session.get("profile_image");
+
+    if (!storedImage) {
+      setProfileImageUrl(null);
+      return;
+    }
+
+    // Build the full URL: http://localhost:5000/image/account/<filename>
+    const imageUrl = `http://localhost:5000/image/account/${storedImage}`;
+    setProfileImageUrl(imageUrl);
+  }, []);
 
   const handleLogout = () => {
     session.clear();
@@ -414,9 +477,9 @@ const AppBarComponent = ({ children }) => {
   // ── Nav items per role ──────────────────────────────────────────────────────
   const userNavItems = [
     { label: 'Home',        icon: <Icons.Home />,       path: '/' },
-    { label: 'Attendance',  icon: <Icons.Attendance />, path: '/attendance' },
-    { label: 'Borrow Book', icon: <Icons.Borrow />,     path: '/borrow-book' },
-    { label: 'Return Book', icon: <Icons.Return />,     path: '/return-book' },
+    // { label: 'Attendance',  icon: <Icons.Attendance />, path: '/attendance' },
+    // { label: 'Borrow Book', icon: <Icons.Borrow />,     path: '/borrow-book' },
+    // { label: 'Return Book', icon: <Icons.Return />,     path: '/return-book' },
   ];
 
   const adminNavItems = [
@@ -454,7 +517,7 @@ const AppBarComponent = ({ children }) => {
               className="ab-avatar-btn"
               onClick={() => setDropdownOpen(o => !o)}
             >
-              <Avatar name={name} src={profileImage} />
+              <Avatar name={name} src={profileImageUrl} size={32} fontSize={14} />
             </button>
 
             {dropdownOpen && (
@@ -494,7 +557,7 @@ const AppBarComponent = ({ children }) => {
               <div className="ab-drawer-header">
                 <div className="ab-drawer-profile">
                   <div className="ab-drawer-avatar">
-                    <Avatar name={name} src={profileImage} size={44} fontSize={16} />
+                    <Avatar name={name} src={profileImageUrl} size={44} fontSize={18} />
                   </div>
                   <div>
                     <div className="ab-drawer-name">{name || "User"}</div>
@@ -521,12 +584,6 @@ const AppBarComponent = ({ children }) => {
               ))}
 
               <div className="ab-divider" style={{ marginTop: 'auto' }} />
-
-              {/* Logout at bottom */}
-              <button className="ab-logout-item" onClick={handleLogout}>
-                <Icons.Logout />
-                Sign Out
-              </button>
 
             </nav>
           </>

@@ -1,4 +1,4 @@
-const Student = require('../models/Student');
+const Student = require('../models/account');
 const calculateFine = require('../services/fineCalculator');
 
 // Function to calculate and update fines

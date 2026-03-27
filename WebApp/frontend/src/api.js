@@ -3,18 +3,16 @@ import axios from 'axios';
 const BASE_URL = 'http://localhost:5000';
 
 // Sign-In function
-export const signInUser = async (username, password) => {
+export const signInUser = async (roll_no, password) => {
   try {
-    const response = await axios.post("http://localhost:5000/signin", {
-      username,
-      password,
-    });
-    return response; // Axios automatically resolves JSON responses
+    const response = await axios.post(`${BASE_URL}/account/signin`, { roll_no, password });
+    return response;
   } catch (error) {
     console.error("API Error:", error);
     throw error;
   }
 };
+
 
 // Existing attendance function (if needed)
 export const fetchAttendanceData = async () => {

@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb+srv://dharunprakash:12345@cluster0.tttb0r3.mongodb.net/nfcData');
+    await mongoose.connect(process.env.MONGO_URI, {
+    });
+
     console.log('Connected to MongoDB');
   } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
-    process.exit(1);  // Exit process with failure if connection fails
+    console.error('Error connecting to MongoDB:', error.message);
+    process.exit(1); // stop server if DB fails
   }
 };
 

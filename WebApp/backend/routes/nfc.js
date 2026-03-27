@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
-const Book = require('../models/Book');
+const Book = require('../models/book');
 const parseNFCData = require('../utils/parseNFCData');
 
 

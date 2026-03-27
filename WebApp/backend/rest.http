@@ -1,0 +1,252 @@
+### ─────────────────────────────────────────
+### ACCOUNT ROUTES - REST CLIENT
+### ─────────────────────────────────────────
+
+### Sign In
+POST http://localhost:5000/account/signin
+Content-Type: application/json
+
+{
+  "roll_no": "22AD063",
+  "password": "0000"
+}
+
+###
+
+### Register a New Account (Normal User)
+POST http://localhost:5000/account/register
+Content-Type: application/json
+
+{
+  "name": "Lenin M",
+  "department": "AI&DS",
+  "roll_no": "22AD081",
+  "mobile": "6381851468",
+  "password": "0000",
+  "is_admin": false,
+  "profile_image": "22AD081.jpg"
+}
+
+###
+
+### Register a New Account (Admin User)
+POST http://localhost:5000/account/register
+Content-Type: application/json
+
+{
+  "name": "Admin",
+  "department": "Library",
+  "roll_no": "LB001",
+  "mobile": "9874561230",
+  "password": "0000",
+  "is_admin": true,
+  "profile_image": "admin.jpg"
+}
+
+###
+
+### Get All Accounts
+GET http://localhost:5000/account/
+Content-Type: application/json
+
+###
+
+### Get Single Account by Roll No
+GET http://localhost:5000/account/CS2021001
+Content-Type: application/json
+
+###
+
+### Update Account (Partial Update)
+PUT http://localhost:5000/account/CS2021001
+Content-Type: application/json
+
+{
+  "name": "John Updated",
+  "mobile": "9123456780",
+  "department": "Information Technology"
+}
+
+###
+
+### Update Account Password
+PUT http://localhost:5000/account/CS2021001
+Content-Type: application/json
+
+{
+  "password": "newSecurePassword@456"
+}
+
+###
+
+### Update Profile Image
+PUT http://localhost:5000/account/CS2021001
+Content-Type: application/json
+
+{
+  "profile_image": "https://example.com/images/johndoe_new.jpg"
+}
+
+###
+
+### Promote Account to Admin
+PUT http://localhost:5000/account/CS2021001
+Content-Type: application/json
+
+{
+  "is_admin": true
+}
+
+###
+
+### Delete Account
+DELETE http://localhost:5000/account/CS2021001
+Content-Type: application/json
+
+
+### ─────────────────────────────────────────
+### BOOK ROUTES - REST CLIENT
+### ─────────────────────────────────────────
+
+### Get All Books
+GET http://localhost:5000/book/
+Content-Type: application/json
+
+###
+
+### Get Single Book by ID
+GET http://localhost:5000/book/BK001
+Content-Type: application/json
+
+###
+
+### Create a New Book
+POST http://localhost:5000/book/
+Content-Type: application/json
+
+{
+  "book_id": "BK001",
+  "title": "The Great Gatsby",
+  "author": "F. Scott Fitzgerald",
+  "genre": "Classic Fiction",
+  "total_pieces": 5,
+  "available_pieces": 5,
+  "cover_image": "BK001.jpg"
+}
+
+###
+
+### Create Another Book (no cover image)
+POST http://localhost:5000/book/
+Content-Type: application/json
+
+{
+  "book_id": "BK002",
+  "title": "To Kill a Mockingbird",
+  "author": "Harper Lee",
+  "genre": "Fiction",
+  "total_pieces": 3
+}
+
+###
+
+### Update Book Details
+PUT http://localhost:5000/book/BK001
+Content-Type: application/json
+
+{
+  "genre": "American Literature",
+  "total_pieces": 8,
+  "available_pieces": 7,
+  "cover_image": "https://example.com/images/gatsby-new.jpg"
+}
+
+###
+
+### Update Only Cover Image
+PUT http://localhost:5000/book/BK001
+Content-Type: application/json
+
+{
+  "cover_image": "https://example.com/images/gatsby-updated.jpg"
+}
+
+###
+
+### Borrow a Book
+POST http://localhost:5000/book/BK001/borrow
+Content-Type: application/json
+
+{
+  "roll_no": "CS2021001",
+  "due_date": "2025-03-15"
+}
+
+###
+
+### Borrow Same Book - Different Member
+POST http://localhost:5000/book/BK001/borrow
+Content-Type: application/json
+
+{
+  "roll_no": "CS2021002",
+  "due_date": "2025-03-20"
+}
+
+###
+
+### Return a Book
+POST http://localhost:5000/book/BK001/return
+Content-Type: application/json
+
+{
+  "roll_no": "CS2021001"
+}
+
+###
+
+### Delete a Book
+DELETE http://localhost:5000/book/BK001
+Content-Type: application/json
+
+### Bulk Create Books
+POST http://localhost:5000/book/bulk
+Content-Type: application/json
+
+{
+  "books": [
+    {
+      "book_id": "BK003",
+      "title": "1984",
+      "author": "George Orwell",
+      "genre": "Dystopian",
+      "total_pieces": 4,
+      "cover_image": "https://example.com/images/1984.jpg"
+    },
+    {
+      "book_id": "BK004",
+      "title": "Brave New World",
+      "author": "Aldous Huxley",
+      "genre": "Dystopian",
+      "total_pieces": 3
+    },
+    {
+      "book_id": "BK005",
+      "title": "The Catcher in the Rye",
+      "author": "J.D. Salinger",
+      "genre": "Fiction",
+      "total_pieces": 5,
+      "available_pieces": 3
+    },
+    {
+      "book_id": "BK001",
+      "title": "Duplicate Test",
+      "author": "Someone",
+      "total_pieces": 2
+    },
+    {
+      "title": "Missing Fields Test",
+      "author": "Someone"
+    }
+  ]
+}

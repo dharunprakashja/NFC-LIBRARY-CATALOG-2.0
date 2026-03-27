@@ -1,48 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const Account = require('../models/account');
-
-// ─────────────────────────────────────────
-// AUTH ROUTES
-// ─────────────────────────────────────────
-
-// Sign-In
-router.post('/signin', async (req, res) => {
-  const { roll_no, password } = req.body;
-
-  try {
-    if (!roll_no || !password) {
-      return res.status(400).json({ message: 'Roll number and password are required' });
-    }
-
-    const user = await Account.findOne({ roll_no });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Compare hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    res.status(200).json({
-      message: 'Sign-in successful',
-      account: {
-        name: user.name,
-        roll_no: user.roll_no,
-        department: user.department,
-        mobile: user.mobile,
-        is_admin: user.is_admin,
-        profile_image: user.profile_image,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error', error: error.message });
-  }
-});
+const Student = require('../models/account'); // Import Student model
+const { updateFinesManually } = require('../controllers/fineController');
 
 // ─────────────────────────────────────────
 // CRUD ROUTES
@@ -175,5 +134,8 @@ router.delete('/:roll_no', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 });
+
+// Route to manually update fines
+router.post('/update-fines', updateFinesManually);
 
 module.exports = router;

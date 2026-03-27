@@ -5,14 +5,14 @@ require("dotenv").config();
 const router = express.Router();
 router.use(express.json());
 
-const API_KEY = "AIzaSyBrulOorXX01nH0VVkCV6Ts6hK64EGxyBU";
+const API_KEY = "AIzaSyAKpigqE9c_CWVuSw9nDBpANQGr8s_BoBI";
 
 if (!API_KEY) {
   console.error("❌ ERROR: Gemini API Key is missing!");
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 router.post("/", async (req, res) => {
   const { prompt } = req.body;
@@ -23,8 +23,7 @@ router.post("/", async (req, res) => {
 
   try {
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text(); // ✅ Extract text response
-
+    const responseText = result.response.text();
     res.json({ summary: responseText });
   } catch (error) {
     console.error("❌ Gemini AI Error:", error);

@@ -48,7 +48,7 @@
 // // //        if (hasFine || booksToReturn.length > 0) {
 // // //          const message = `Notice: You have an outstanding fine of ₹${student.total_fine}. Please return the following overdue books immediately: ${booksToReturn.join(', ')}.`;
 // // //          console.log(`Sending SMS to ${student.name} (${student.mobile}): ${message}`);
-        
+
 // // //          // Send SMS
 // // //          await sendSMS(student.mobile, message);
 // // //        } else {
@@ -64,7 +64,7 @@
 
 // // //  module.exports = sendNotifications;
 
-const Student = require('../models/Student');
+const Student = require('../models/account');
 const calculateFine = require('../services/fineCalculator');
 const twilio = require('twilio');
 require('dotenv').config();
