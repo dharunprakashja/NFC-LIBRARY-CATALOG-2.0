@@ -7,17 +7,16 @@
 
 const char* ssid = "DHAROO'S23";         // Replace with your Wi-Fi SSID
 const char* password = "12345678";        // Replace with your Wi-Fi password
-  const char* serverIP = "10.207.80.102";     // Backend server's IP address
-const int serverPort = 5000;               // Backend server port
+
+const char* server = "damon-pseudoconservative-laryngeally.ngrok-free.dev"; 
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 void setup() {
-  Serial.begin(9600);  // Initialize serial communication
-  SPI.begin();         // Initialize SPI bus
-  mfrc522.PCD_Init();  // Initialize MFRC522 card
+  Serial.begin(9600);  
+  SPI.begin();         
+  mfrc522.PCD_Init();  
 
-  // Connect to Wi-Fi
   Serial.print("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -29,16 +28,15 @@ void setup() {
 
 void loop() {
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    String nfcData = "";  // Store NFC data
+    String nfcData = "";  
 
     byte buffer[18];
     byte size = sizeof(buffer);
 
-    // Read data from the NFC card
     for (byte block = 6; block <= 30; block++) {
       if (mfrc522.MIFARE_Read(block, buffer, &size) == MFRC522::STATUS_OK) {
         for (byte i = 1; i < 5; i++) {
-          if (buffer[i] >= 32 && buffer[i] <= 126) {  // Printable ASCII range
+          if (buffer[i] >= 32 && buffer[i] <= 126) {  
             nfcData += (char)buffer[i];
           }
         }
@@ -46,27 +44,24 @@ void loop() {
     }
 
     Serial.print("NFC Data: ");
-    Serial.println(nfcData);  // Debug print
+    Serial.println(nfcData);  
 
-    // Send NFC data to the backend
     sendToBackend(escapeJson(nfcData));
 
-    // Halt and stop encryption
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-    delay(3000);  // Avoid multiple triggers
+    delay(3000);  
   }
 }
 
-// Function to escape special characters in JSON
 String escapeJson(const String& data) {
   String escapedData = "";
   for (unsigned int i = 0; i < data.length(); i++) {
     char c = data.charAt(i);
     if (c == '"') {
-      escapedData += "\\\"";  // Escape double quotes
+      escapedData += "\\\"";  
     } else if (c == '\\') {
-      escapedData += "\\\\";  // Escape backslashes
+      escapedData += "\\\\";  
     } else {
       escapedData += c;
     }
@@ -74,47 +69,45 @@ String escapeJson(const String& data) {
   return escapedData;
 }
 
-// Function to send NFC data to the backend
 void sendToBackend(String data) {
   if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client;
+    
+    // CHANGED: Back to standard WiFiClient (No SSL)
+    WiFiClient client; 
 
-    Serial.print("Attempting to connect to ");
-    Serial.print(serverIP);
-    Serial.print(":");
-    Serial.println(serverPort);
+    Serial.print("Attempting to connect to server on Port 80... ");
 
-    // Try to connect to the backend server
-    if (!client.connect(serverIP, serverPort)) {
-      Serial.println("Connection to backend failed! Check IP, port, and network settings.");
+    // CHANGED: Using Port 80 (Standard unencrypted HTTP)
+    if (!client.connect(server, 80)) {
+      Serial.println("Connection failed!");
       return;
     }
 
-    // Create JSON payload with escaped NFC data
     String payload = "{\"nfc_data\":\"" + data + "\"}";
 
-    // Send HTTP POST request
-// Send HTTP POST request
-client.println("POST /attendance HTTP/1.1");
-
-    client.println("Host: " + String(serverIP));
+    client.println("POST /attendance HTTP/1.1");
+    client.println("Host: " + String(server));
     client.println("Content-Type: application/json");
+    client.println("ngrok-skip-browser-warning: true"); 
     client.print("Content-Length: ");
     client.println(payload.length());
-    client.println();  // End of headers
-    client.println(payload);  // Send payload
+    client.println();  
+    client.print(payload);  
 
-    // Wait for response
-    while (client.connected() && !client.available()) {
+    int timeout = 0;
+    while (client.connected() && !client.available() && timeout < 500) {
       delay(10);
+      timeout++;
     }
+    
+    Serial.println("Response:");
     while (client.available()) {
       String response = client.readStringUntil('\r');
-      Serial.print("Response from server: ");
-      Serial.println(response);  // Print server response
+      Serial.print(response);  
     }
+    Serial.println("\n--- End of Response ---");
 
-    client.stop();  // Close connection
+    client.stop();  
   } else {
     Serial.println("Wi-Fi not connected!");
   }
