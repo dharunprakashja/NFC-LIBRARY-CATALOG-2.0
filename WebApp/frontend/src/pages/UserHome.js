@@ -5,7 +5,18 @@ axios.defaults.baseURL = "http://localhost:5000";
 
 // ─── URL Builders (matching original pattern from doc) ───────────────────────
 const profileImgUrl = (img) => img ? `http://localhost:5000/image/account/${img}` : null;
-const bookCoverUrl = (img) => img ? `http://localhost:5000/image/book/${img}` : null;
+const bookCoverUrl = (img) => {
+  if (!img) return null;
+
+  const value = String(img).trim();
+  if (!value) return null;
+
+  if (/^(https?:)?\/\//i.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) return `http://localhost:5000${value}`;
+  if (value.startsWith("image/")) return `http://localhost:5000/${value}`;
+
+  return `http://localhost:5000/image/book/${encodeURI(value)}`;
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const PALETTE = [

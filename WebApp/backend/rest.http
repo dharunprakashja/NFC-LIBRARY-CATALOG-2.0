@@ -17,15 +17,152 @@ Content-Type: application/json
 POST http://localhost:5000/account/register
 Content-Type: application/json
 
-{
-  "name": "Lenin M",
-  "department": "AI&DS",
-  "roll_no": "22AD081",
-  "mobile": "6381851468",
-  "password": "0000",
-  "is_admin": false,
-  "profile_image": "22AD081.jpg"
-}
+[
+  {
+    "name": "Devaprasath K",
+    "department": "AI&DS",
+    "roll_no": "22AD061",
+    "mobile": "9784512360",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD061.jpg"
+  },
+  {
+    "name": "Dharaneesh",
+    "department": "AI&DS",
+    "roll_no": "22AD062",
+    "mobile": "9123456781",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD062.jpg"
+  },
+  {
+    "name": "Dheenadhayalan",
+    "department": "AI&DS",
+    "roll_no": "22AD064",
+    "mobile": "9345678123",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD064.jpg"
+  },
+  {
+    "name": "Dinesh I",
+    "department": "AI&DS",
+    "roll_no": "22AD065",
+    "mobile": "9876543210",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD065.jpg"
+  },
+  {
+    "name": "Dinesh M",
+    "department": "AI&DS",
+    "roll_no": "22AD066",
+    "mobile": "9012345678",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD066.jpg"
+  },
+  {
+    "name": "Durai M",
+    "department": "AI&DS",
+    "roll_no": "22AD067",
+    "mobile": "8899776655",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD067.jpg"
+  },
+  {
+    "name": "Elavarasan",
+    "department": "AI&DS",
+    "roll_no": "22AD068",
+    "mobile": "9786655443",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD068.jpg"
+  },
+  {
+    "name": "Gokul Raj G",
+    "department": "AI&DS",
+    "roll_no": "22AD069",
+    "mobile": "9654321876",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD069.jpg"
+  },
+  {
+    "name": "Gowtham S",
+    "department": "AI&DS",
+    "roll_no": "22AD070",
+    "mobile": "9345612789",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD070.jpg"
+  },
+  {
+    "name": "Hiruthik R",
+    "department": "AI&DS",
+    "roll_no": "22AD072",
+    "mobile": "9870011223",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD072.jpg"
+  },
+  {
+    "name": "Jerome Mc Jedidiah C",
+    "department": "AI&DS",
+    "roll_no": "22AD075",
+    "mobile": "9123409876",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD075.jpg"
+  },
+  {
+    "name": "Kumaran E",
+    "department": "AI&DS",
+    "roll_no": "22AD079",
+    "mobile": "9001122334",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD079.jpg"
+  },
+  {
+    "name": "Maheshwaran M",
+    "department": "AI&DS",
+    "roll_no": "22AD082",
+    "mobile": "9776655443",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD082.jpg"
+  },
+  {
+    "name": "Manivasue E",
+    "department": "AI&DS",
+    "roll_no": "22AD083",
+    "mobile": "9665544332",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD083.jpg"
+  },
+  {
+    "name": "Mohammed Yasher M",
+    "department": "AI&DS",
+    "roll_no": "22AD084",
+    "mobile": "9554433221",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD084.jpg"
+  },
+  {
+    "name": "Pranesh T",
+    "department": "AI&DS",
+    "roll_no": "22AD089",
+    "mobile": "9110099887",
+    "password": "0000",
+    "is_admin": false,
+    "profile_image": "22AD089.jpg"
+  }
+]
 
 ###
 
@@ -124,15 +261,188 @@ Content-Type: application/json
 POST http://localhost:5000/book/
 Content-Type: application/json
 
-{
-  "book_id": "BK001",
-  "title": "The Great Gatsby",
-  "author": "F. Scott Fitzgerald",
-  "genre": "Classic Fiction",
-  "total_pieces": 5,
-  "available_pieces": 5,
-  "cover_image": "BK001.jpg"
-}
+[
+  {
+    "book_id": "BK006",
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "genre": "Classic Fiction",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8225261-L.jpg"
+  },
+  {
+    "book_id": "BK007",
+    "title": "1984",
+    "author": "George Orwell",
+    "genre": "Dystopian",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/7222246-L.jpg"
+  },
+  {
+    "book_id": "BK008",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "genre": "Romance",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8091016-L.jpg"
+  },
+  {
+    "book_id": "BK009",
+    "title": "The Catcher in the Rye",
+    "author": "J.D. Salinger",
+    "genre": "Classic Fiction",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8231856-L.jpg"
+  },
+  {
+    "book_id": "BK010",
+    "title": "The Hobbit",
+    "author": "J.R.R. Tolkien",
+    "genre": "Fantasy",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/6979861-L.jpg"
+  },
+  {
+    "book_id": "BK011",
+    "title": "Fahrenheit 451",
+    "author": "Ray Bradbury",
+    "genre": "Dystopian",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/9259251-L.jpg"
+  },
+  {
+    "book_id": "BK012",
+    "title": "Moby Dick",
+    "author": "Herman Melville",
+    "genre": "Adventure",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8108691-L.jpg"
+  },
+  {
+    "book_id": "BK013",
+    "title": "War and Peace",
+    "author": "Leo Tolstoy",
+    "genre": "Historical Fiction",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/7222161-L.jpg"
+  },
+  {
+    "book_id": "BK014",
+    "title": "The Alchemist",
+    "author": "Paulo Coelho",
+    "genre": "Philosophical Fiction",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8101356-L.jpg"
+  },
+  {
+    "book_id": "BK015",
+    "title": "The Da Vinci Code",
+    "author": "Dan Brown",
+    "genre": "Thriller",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8231996-L.jpg"
+  },
+  {
+    "book_id": "BK016",
+    "title": "The Hunger Games",
+    "author": "Suzanne Collins",
+    "genre": "Science Fiction",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/7263786-L.jpg"
+  },
+  {
+    "book_id": "BK017",
+    "title": "Harry Potter and the Sorcerer's Stone",
+    "author": "J.K. Rowling",
+    "genre": "Fantasy",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/7984916-L.jpg"
+  },
+  {
+    "book_id": "BK018",
+    "title": "The Lord of the Rings",
+    "author": "J.R.R. Tolkien",
+    "genre": "Fantasy",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8235081-L.jpg"
+  },
+  {
+    "book_id": "BK019",
+    "title": "The Kite Runner",
+    "author": "Khaled Hosseini",
+    "genre": "Drama",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8228691-L.jpg"
+  },
+  {
+    "book_id": "BK020",
+    "title": "Life of Pi",
+    "author": "Yann Martel",
+    "genre": "Adventure",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8128691-L.jpg"
+  },
+  {
+    "book_id": "BK021",
+    "title": "The Shining",
+    "author": "Stephen King",
+    "genre": "Horror",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8231991-L.jpg"
+  },
+  {
+    "book_id": "BK022",
+    "title": "Dracula",
+    "author": "Bram Stoker",
+    "genre": "Horror",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8108692-L.jpg"
+  },
+  {
+    "book_id": "BK023",
+    "title": "The Fault in Our Stars",
+    "author": "John Green",
+    "genre": "Romance",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/7269256-L.jpg"
+  },
+  {
+    "book_id": "BK024",
+    "title": "The Book Thief",
+    "author": "Markus Zusak",
+    "genre": "Historical Fiction",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/8235116-L.jpg"
+  },
+  {
+    "book_id": "BK025",
+    "title": "Atomic Habits",
+    "author": "James Clear",
+    "genre": "Self Help",
+    "total_pieces": 5,
+    "available_pieces": 5,
+    "cover_image": "https://covers.openlibrary.org/b/id/11153221-L.jpg"
+  }
+]
 
 ###
 

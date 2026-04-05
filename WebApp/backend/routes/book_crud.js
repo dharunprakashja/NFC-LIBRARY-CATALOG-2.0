@@ -32,31 +32,78 @@ router.get('/:book_id', async (req, res) => {
 // CREATE A NEW BOOK
 // ─────────────────────────────────────────
 router.post('/', async (req, res) => {
-  const { book_id, title, author, genre, total_pieces, available_pieces, cover_image } = req.body;
-
   try {
-    if (!book_id || !title || !author || !total_pieces) {
-      return res.status(400).json({ message: 'book_id, title, author and total_pieces are required' });
+    // Support both single object and array
+    const books = Array.isArray(req.body) ? req.body : [req.body];
+
+    if (!books.length) {
+      return res.status(400).json({ message: 'No book data provided' });
     }
 
-    const existing = await Book.findOne({ book_id });
-    if (existing) return res.status(409).json({ message: 'Book with this ID already exists' });
+    const results = [];
+    const errors = [];
 
-    const book = new Book({
-      book_id,
-      title,
-      author,
-      genre:             genre            || null,
-      cover_image:       cover_image      || null,
-      total_pieces,
-      available_pieces:  available_pieces ?? total_pieces, // default to total if not provided
-      borrowed_by:       [],
+    // 🔥 Optimize: get all existing book_ids in one query
+    const bookIds = books.map(b => b.book_id).filter(Boolean);
+    const existingBooks = await Book.find({ book_id: { $in: bookIds } });
+    const existingSet = new Set(existingBooks.map(b => b.book_id));
+
+    for (let i = 0; i < books.length; i++) {
+      const {
+        book_id,
+        title,
+        author,
+        genre,
+        total_pieces,
+        available_pieces,
+        cover_image
+      } = books[i];
+
+      // ✅ Validation
+      if (!book_id || !title || !author || !total_pieces) {
+        errors.push({ index: i, message: 'Missing required fields' });
+        continue;
+      }
+
+      // ✅ Duplicate check (optimized)
+      if (existingSet.has(book_id)) {
+        errors.push({ index: i, message: `Book ID ${book_id} already exists` });
+        continue;
+      }
+
+      const newBook = new Book({
+        book_id,
+        title,
+        author,
+        genre: genre || null,
+        cover_image: cover_image || null,
+        total_pieces,
+        available_pieces: available_pieces ?? total_pieces,
+        borrowed_by: []
+      });
+
+      await newBook.save();
+
+      results.push({
+        book_id,
+        title,
+        author
+      });
+    }
+
+    return res.status(201).json({
+      message: 'Bulk book insert completed',
+      created_count: results.length,
+      failed_count: errors.length,
+      created_books: results,
+      errors: errors
     });
 
-    await book.save();
-    res.status(201).json({ message: 'Book created successfully', book });
   } catch (err) {
-    res.status(500).json({ message: 'Error creating book', error: err.message });
+    return res.status(500).json({
+      message: 'Error creating books',
+      error: err.message
+    });
   }
 });
 

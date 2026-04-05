@@ -5,10 +5,24 @@ axios.defaults.baseURL = "http://localhost:5000";
 
 const BASE_COVER_URL = "http://localhost:5000/image/book/";
 
-// ── Build full cover image URL from filename ───────────────────────────────────
-function getCoverImageUrl(filename) {
-  if (!filename) return null;
-  return `${BASE_COVER_URL}${filename}`;
+// Accept both remote links and local filenames stored in backend image/book folder.
+function getCoverImageUrl(value) {
+  if (!value) return null;
+
+  const imageValue = String(value).trim();
+  if (!imageValue) return null;
+
+  // Full URLs or data URLs should be used directly.
+  if (/^(https?:)?\/\//i.test(imageValue) || imageValue.startsWith("data:")) {
+    return imageValue;
+  }
+
+  // Supports saved values like /image/book/file.jpg or image/book/file.jpg.
+  if (imageValue.startsWith("/")) return `http://localhost:5000${imageValue}`;
+  if (imageValue.startsWith("image/")) return `http://localhost:5000/${imageValue}`;
+
+  // Default mode: plain filename in backend image/book folder.
+  return `${BASE_COVER_URL}${encodeURI(imageValue)}`;
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -380,7 +394,7 @@ function formatDate(d) {
 function dueStatus(due_date) {
   if (!due_date) return "ok";
   const diff = Math.ceil((new Date(due_date) - new Date()) / (1000 * 60 * 60 * 24));
-  if (diff < 0)  return "overdue";
+  if (diff < 0) return "overdue";
   if (diff <= 3) return "due-soon";
   return "ok";
 }
@@ -388,14 +402,14 @@ function dueStatus(due_date) {
 function dueLabel(due_date) {
   if (!due_date) return "—";
   const diff = Math.ceil((new Date(due_date) - new Date()) / (1000 * 60 * 60 * 24));
-  if (diff < 0)  return `${Math.abs(diff)}d overdue`;
+  if (diff < 0) return `${Math.abs(diff)}d overdue`;
   if (diff === 0) return "Due today";
   return `Due ${formatDate(due_date)}`;
 }
 
 function availStatus(book) {
-  if (book.available_pieces === 0)                                    return "unavailable";
-  if (book.available_pieces <= Math.ceil(book.total_pieces / 3))     return "low";
+  if (book.available_pieces === 0) return "unavailable";
+  if (book.available_pieces <= Math.ceil(book.total_pieces / 3)) return "low";
   return "available";
 }
 
@@ -409,8 +423,8 @@ function availLabel(book) {
 // Builds full URL from filename; falls back to first letter of title on error/missing
 function BookCover({ title, src, letterSize = 56 }) {
   const [imgError, setImgError] = useState(false);
-  const colors  = coverColor(title);
-  const letter  = title?.trim()?.[0]?.toUpperCase() || "?";
+  const colors = coverColor(title);
+  const letter = title?.trim()?.[0]?.toUpperCase() || "?";
   const imageUrl = getCoverImageUrl(src);
 
   // Reset error when a different book is shown
@@ -466,7 +480,7 @@ function BookModal({ book, onClose }) {
           <BookCover title={book.title} src={book.cover_image} letterSize={80} />
           <button className="bg-close" onClick={onClose}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -507,7 +521,7 @@ function BookModal({ book, onClose }) {
               <div key={i} className="bg-borrower-row">
                 <span className="bg-borrower-roll">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                   </svg>
                   {b.roll_no}
                 </span>
@@ -528,11 +542,11 @@ function BookModal({ book, onClose }) {
 
 // ── BooksGrid ─────────────────────────────────────────────────────────────────
 export default function BooksGrid() {
-  const [books,    setBooks]    = useState([]);
-  const [search,   setSearch]   = useState("");
-  const [filter,   setFilter]   = useState("all");
+  const [books, setBooks] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios.get("/book")
@@ -552,10 +566,10 @@ export default function BooksGrid() {
       b.book_id?.toLowerCase().includes(search.toLowerCase());
 
     const matchFilter =
-      filter === "all"         ? true :
-      filter === "available"   ? b.available_pieces > 0 :
-      filter === "unavailable" ? b.available_pieces === 0 :
-      b.genre === filter;
+      filter === "all" ? true :
+        filter === "available" ? b.available_pieces > 0 :
+          filter === "unavailable" ? b.available_pieces === 0 :
+            b.genre === filter;
 
     return matchSearch && matchFilter;
   });
@@ -620,13 +634,13 @@ export default function BooksGrid() {
                 <div className="bg-card-footer">
                   <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                     </svg>
                     {book.available_pieces}/{book.total_pieces} copies
                   </span>
                   <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                     </svg>
                     {(book.borrowed_by || []).length} borrowed
                   </span>

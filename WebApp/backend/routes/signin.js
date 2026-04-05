@@ -50,46 +50,75 @@ router.post('/signin', async (req, res) => {
 
 // CREATE - Register a new account
 router.post('/register', async (req, res) => {
-  const { name, department, roll_no, mobile, password, is_admin, profile_image } = req.body;
-
   try {
-    // Validate required fields
-    if (!name || !roll_no || !password) {
-      return res.status(400).json({ message: 'Name, roll number, and password are required' });
+    // Handle both single object and array
+    const users = Array.isArray(req.body) ? req.body : [req.body];
+
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i];
+
+      const {
+        name,
+        department,
+        roll_no,
+        mobile,
+        password,
+        is_admin,
+        profile_image
+      } = user;
+
+      // ✅ Validation per user
+      if (!name || !roll_no || !password) {
+        errors.push({ index: i, message: 'Missing required fields' });
+        continue;
+      }
+
+      // ✅ Duplicate check
+      const existing = await Account.findOne({ roll_no });
+      if (existing) {
+        errors.push({ index: i, message: `Roll no ${roll_no} already exists` });
+        continue;
+      }
+
+      // ✅ Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newAccount = new Account({
+        name,
+        department,
+        roll_no,
+        mobile,
+        password: hashedPassword,
+        is_admin: is_admin || false,
+        profile_image: profile_image || null,
+      });
+
+      await newAccount.save();
+
+      results.push({
+        name,
+        roll_no,
+        department,
+        is_admin: is_admin || false
+      });
     }
 
-    // Check if roll_no already exists
-    const existing = await Account.findOne({ roll_no });
-    if (existing) {
-      return res.status(409).json({ message: 'Account with this roll number already exists' });
-    }
-
-    // Hash password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newAccount = new Account({
-      name,
-      department,
-      roll_no,
-      mobile,
-      password: hashedPassword,
-      is_admin: is_admin || false,
-      profile_image: profile_image || null,
+    return res.status(201).json({
+      message: 'Bulk insert completed',
+      created_count: results.length,
+      failed_count: errors.length,
+      created_users: results,
+      errors: errors
     });
 
-    await newAccount.save();
-
-    res.status(201).json({
-      message: 'Account created successfully',
-      account: {
-        name: newAccount.name,
-        roll_no: newAccount.roll_no,
-        department: newAccount.department,
-        is_admin: newAccount.is_admin,
-      },
-    });
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    return res.status(500).json({
+      message: 'Internal Server Error',
+      error: error.message
+    });
   }
 });
 

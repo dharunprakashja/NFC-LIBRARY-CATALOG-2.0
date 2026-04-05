@@ -6,4 +6,4 @@
 
 ./WebApp/frontend/node_modules/
 ./WebApp/backend/node_modules/
-.env/
+./WebApp/backend/.env

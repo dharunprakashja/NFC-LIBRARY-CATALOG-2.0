@@ -8,7 +8,18 @@ const socket = io("http://localhost:5000");
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
 const profileImgUrl = (img) => img ? `http://localhost:5000/image/account/${img}` : null;
-const bookCoverUrl  = (img) => img ? `http://localhost:5000/image/book/${img}`    : null;
+const bookCoverUrl = (img) => {
+  if (!img) return null;
+
+  const value = String(img).trim();
+  if (!value) return null;
+
+  if (/^(https?:)?\/\//i.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) return `http://localhost:5000${value}`;
+  if (value.startsWith("image/")) return `http://localhost:5000/${value}`;
+
+  return `http://localhost:5000/image/book/${encodeURI(value)}`;
+};
 
 // ── Color palette ─────────────────────────────────────────────────────────────
 const COLORS = [
@@ -19,8 +30,8 @@ const COLORS = [
 ];
 const avatarColor = (name) => COLORS[(name?.charCodeAt(0) || 65) % COLORS.length];
 const firstLetter = (name) => name?.trim()?.[0]?.toUpperCase() || "?";
-const passportH   = (w)    => Math.round(w * (45 / 35));
-const fmtDate     = (d)    => d ? new Date(d).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }) : "—";
+const passportH = (w) => Math.round(w * (45 / 35));
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = `
@@ -219,8 +230,8 @@ const styles = `
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const LibraryIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
   </svg>
 );
 
@@ -228,9 +239,9 @@ const LibraryIcon = () => (
 function PassportPhoto({ account, width = 88 }) {
   const [err, setErr] = useState(false);
   const [c1, c2] = avatarColor(account?.name);
-  const url    = profileImgUrl(account?.profile_image);
+  const url = profileImgUrl(account?.profile_image);
   const height = passportH(width);
-  const fs     = Math.round(width * 0.36);
+  const fs = Math.round(width * 0.36);
 
   useEffect(() => { setErr(false); }, [account?.profile_image]);
 
@@ -255,9 +266,9 @@ function PassportPhoto({ account, width = 88 }) {
 function BookCover({ book, width = 44 }) {
   const [err, setErr] = useState(false);
   const [c1, c2] = avatarColor(book?.title || book?.book_id);
-  const url    = bookCoverUrl(book?.cover_image);
+  const url = bookCoverUrl(book?.cover_image);
   const height = passportH(width);
-  const fs     = Math.round(width * 0.38);
+  const fs = Math.round(width * 0.38);
 
   useEffect(() => { setErr(false); }, [book?.cover_image]);
 
@@ -280,11 +291,11 @@ function BookCover({ book, width = 44 }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function BorrowReturnDisplay() {
   const [accountData, setAccountData] = useState(null);
-  const [bookData,    setBookData]    = useState([]);
-  const [message,     setMessage]     = useState("");
-  const [action,      setAction]      = useState(null);
-  const [stopping,    setStopping]    = useState(false);
-  const [toast,       setToast]       = useState("");
+  const [bookData, setBookData] = useState([]);
+  const [message, setMessage] = useState("");
+  const [action, setAction] = useState(null);
+  const [stopping, setStopping] = useState(false);
+  const [toast, setToast] = useState("");
 
   const showToast = (msg) => {
     setToast(msg);

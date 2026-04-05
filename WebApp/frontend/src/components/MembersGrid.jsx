@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
 axios.defaults.baseURL = "http://localhost:5000";
@@ -11,21 +11,34 @@ function getProfileImageUrl(filename) {
   return `${BASE_IMAGE_URL}${filename}`;
 }
 
-// ── Color palette ─────────────────────────────────────────────────────────────
+// ── Color palette (Expanded to 16 pairs for more variety) ──────────────────────
 const COLORS = [
-  ["#1a1a2e", "#16213e"],
-  ["#134e4a", "#0f766e"],
-  ["#1e3a5f", "#1d4ed8"],
-  ["#4c1d95", "#7c3aed"],
-  ["#831843", "#be185d"],
-  ["#7c2d12", "#c2410c"],
-  ["#14532d", "#15803d"],
-  ["#1c3a5e", "#0369a1"],
+  ["#1a1a2e", "#16213e"], // Deep Navy
+  ["#134e4a", "#0f766e"], // Teal
+  ["#1e3a5f", "#1d4ed8"], // Royal Blue
+  ["#4c1d95", "#7c3aed"], // Violet
+  ["#831843", "#be185d"], // Rose
+  ["#7c2d12", "#c2410c"], // Rust
+  ["#14532d", "#15803d"], // Forest Green
+  ["#1c3a5e", "#0369a1"], // Ocean Blue
+  ["#581c87", "#9333ea"], // Purple
+  ["#9f1239", "#e11d48"], // Crimson
+  ["#3f6212", "#65a30d"], // Olive
+  ["#0f172a", "#334155"], // Slate
+  ["#701a75", "#a21caf"], // Fuchsia
+  ["#064e3b", "#059669"], // Emerald
+  ["#78350f", "#b45309"], // Amber
+  ["#312e81", "#4f46e5"], // Indigo
 ];
 
+// String hashing for better randomization
 function avatarColor(name) {
-  const idx = (name?.charCodeAt(0) || 65) % COLORS.length;
-  return COLORS[idx];
+  if (!name) return COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return COLORS[Math.abs(hash) % COLORS.length];
 }
 
 function firstLetter(name) {
@@ -37,6 +50,14 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString("en-IN", {
     day: "2-digit", month: "short", year: "numeric",
   });
+}
+
+// Helper to mask only the last 5 digits
+function getMaskedMobile(mobile) {
+  if (!mobile) return "—";
+  const str = String(mobile).trim();
+  if (str.length <= 5) return "•••••"; 
+  return str.slice(0, -5) + "•••••";
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -192,6 +213,24 @@ const styles = `
     height: 13px;
     color: #bbb;
     flex-shrink: 0;
+  }
+
+  /* ── Mobile Masking Styles ── */
+  .mg-mobile-container {
+    cursor: help;
+  }
+  .mg-mobile-masked {
+    display: inline;
+    letter-spacing: 0.5px;
+  }
+  .mg-mobile-visible {
+    display: none;
+  }
+  .mg-mobile-container:hover .mg-mobile-masked {
+    display: none;
+  }
+  .mg-mobile-container:hover .mg-mobile-visible {
+    display: inline;
   }
 
   /* ── Empty / loading ── */
@@ -377,14 +416,11 @@ const styles = `
 `;
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
-// Shows profile image fetched from server; falls back to first letter on error or missing image
-function Avatar({ name, src, size = 64, fontSize = 26, borderSize = 3 }) {
+function Avatar({ name, src, size = 64, fontSize = 26, borderSize = 3, colorPair }) {
   const [imgError, setImgError] = useState(false);
-  const [c1, c2] = avatarColor(name);
+  const [c1, c2] = colorPair || avatarColor(name);
 
-  // Reset error if src changes (e.g. different member selected)
   useEffect(() => { setImgError(false); }, [src]);
-
   const imageUrl = getProfileImageUrl(src);
 
   return (
@@ -414,13 +450,11 @@ function Avatar({ name, src, size = 64, fontSize = 26, borderSize = 3 }) {
 }
 
 // ── Modal Avatar ──────────────────────────────────────────────────────────────
-// Separate avatar for the modal hero (different class/sizing)
-function ModalAvatar({ name, src }) {
+function ModalAvatar({ name, src, colorPair }) {
   const [imgError, setImgError] = useState(false);
-  const [c1, c2] = avatarColor(name);
+  const [c1, c2] = colorPair || avatarColor(name);
 
   useEffect(() => { setImgError(false); }, [src]);
-
   const imageUrl = getProfileImageUrl(src);
 
   return (
@@ -447,11 +481,9 @@ function ModalAvatar({ name, src }) {
 
 // ── Member Modal ──────────────────────────────────────────────────────────────
 function MemberModal({ member, onClose }) {
-  const colors = avatarColor(member?.name);
-
   if (!member) return null;
 
-  const [c1, c2] = colors;
+  const [c1, c2] = member.colorPair || avatarColor(member?.name);
   const recentAttendance = [...(member.attendance || [])]
     .sort((a, b) => new Date(b) - new Date(a))
     .slice(0, 10);
@@ -465,8 +497,7 @@ function MemberModal({ member, onClose }) {
           className="mg-modal-hero"
           style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}
         >
-          {/* Uses ModalAvatar — builds URL from filename + handles error */}
-          <ModalAvatar name={member.name} src={member.profile_image} />
+          <ModalAvatar name={member.name} src={member.profile_image} colorPair={[c1, c2]} />
 
           <button className="mg-close" onClick={onClose}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -495,7 +526,14 @@ function MemberModal({ member, onClose }) {
               </div>
               <div className="mg-detail-item">
                 <div className="mg-detail-key">Mobile</div>
-                <div className="mg-detail-val">{member.mobile || "—"}</div>
+                <div className="mg-detail-val">
+                  {member.mobile ? (
+                    <span className="mg-mobile-container" title="Hover to reveal full number">
+                      <span className="mg-mobile-masked">{getMaskedMobile(member.mobile)}</span>
+                      <span className="mg-mobile-visible">{member.mobile}</span>
+                    </span>
+                  ) : "—"}
+                </div>
               </div>
               <div className="mg-detail-item">
                 <div className="mg-detail-key">Department</div>
@@ -573,12 +611,34 @@ export default function MembersGrid() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = members.filter(m =>
-    !search ||
-    m.name?.toLowerCase().includes(search.toLowerCase()) ||
-    m.roll_no?.toLowerCase().includes(search.toLowerCase()) ||
-    m.department?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    return members.filter(m =>
+      !search ||
+      m.name?.toLowerCase().includes(search.toLowerCase()) ||
+      m.roll_no?.toLowerCase().includes(search.toLowerCase()) ||
+      m.department?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [members, search]);
+
+  const displayMembers = useMemo(() => {
+    let prevColorIdx = -1;
+    return filtered.map(member => {
+      let str = (member.name || "") + (member.roll_no || "");
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      
+      let colorIdx = Math.abs(hash) % COLORS.length;
+      
+      if (colorIdx === prevColorIdx) {
+        colorIdx = (colorIdx + 1) % COLORS.length;
+      }
+      
+      prevColorIdx = colorIdx;
+      return { ...member, colorPair: COLORS[colorIdx] };
+    });
+  }, [filtered]);
 
   return (
     <>
@@ -604,12 +664,12 @@ export default function MembersGrid() {
               <div className="mg-empty">Loading members…</div>
             )}
 
-            {!loading && filtered.length === 0 && (
+            {!loading && displayMembers.length === 0 && (
               <div className="mg-empty">No members found.</div>
             )}
 
-            {!loading && filtered.map((member) => {
-              const [c1, c2] = avatarColor(member.name);
+            {!loading && displayMembers.map((member) => {
+              const [c1, c2] = member.colorPair;
               return (
                 <div
                   key={member.roll_no}
@@ -622,9 +682,9 @@ export default function MembersGrid() {
                     style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}
                   />
 
-                  {/* Avatar + name — passes raw filename; Avatar builds the URL */}
+                  {/* Avatar + name */}
                   <div className="mg-card-top">
-                    <Avatar name={member.name} src={member.profile_image} />
+                    <Avatar name={member.name} src={member.profile_image} colorPair={[c1, c2]} />
                     <div className="mg-name">{member.name}</div>
                     <div className="mg-dept">{member.department}</div>
                     <span className={`mg-badge ${member.is_admin ? "admin" : "member"}`}>
@@ -647,7 +707,12 @@ export default function MembersGrid() {
                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 9a16 16 0 0 0 6 6l.36-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                       </svg>
-                      {member.mobile || "—"}
+                      {member.mobile ? (
+                        <span className="mg-mobile-container" title="Hover to reveal full number">
+                          <span className="mg-mobile-masked">{getMaskedMobile(member.mobile)}</span>
+                          <span className="mg-mobile-visible">{member.mobile}</span>
+                        </span>
+                      ) : "—"}
                     </div>
                     <div className="mg-info-row">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
