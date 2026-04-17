@@ -44,7 +44,7 @@ function buildUserSystemPrompt(user, catalogue) {
 ═══════════════════════════════════════════════════════════
 WHO YOU ARE TALKING TO
 ═══════════════════════════════════════════════════════════
-Name:       ${user.name}
+Name:     ${user.name}
 Department: ${user.department}
 Roll No:    ${user.roll_no}
 Member since: always been here :)
@@ -280,11 +280,20 @@ const css = `
   .lumi-head-btn svg{width:12px;height:12px;}
 
   /* ── Personal stat strip ── */
-  .lumi-stats{display:flex;border-bottom:1px solid #f2f2f2;flex-shrink:0;background:#f9fffe;}
+  .lumi-stats{
+    display:flex;
+    border-bottom:1px solid #f2f2f2;
+    flex-shrink:0;
+    background:#f9fffe;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .lumi-stats::-webkit-scrollbar { display: none; }
   .lumi-stat-cell{
     flex:1;padding:9px 8px;text-align:center;
     border-right:1px solid #f0f0f0;cursor:default;
     transition:background 0.15s;
+    min-width: 62px;
   }
   .lumi-stat-cell:last-child{border-right:none;}
   .lumi-stat-cell:hover{background:#f0fffe;}
@@ -380,6 +389,44 @@ const css = `
   .lumi-spin{width:26px;height:26px;border:2px solid #f0f0f0;border-top-color:#0f766e;border-radius:50%;animation:lSpin 0.7s linear infinite;}
   @keyframes lSpin{to{transform:rotate(360deg)}}
   .lumi-err{margin:0 12px 8px;background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:8px 12px;font-size:11px;color:#e11d48;display:flex;gap:6px;align-items:center;flex-shrink:0;}
+
+  /* ── RESPONSIVE MOBILE ADJUSTMENTS ── */
+  @media (max-width: 600px) {
+    .lumi-fab {
+      bottom: 16px; right: 16px;
+    }
+    .lumi-tip {
+      bottom: 80px; right: 16px;
+    }
+    .lumi-dialog {
+      bottom: 0; right: 0; left: 0; top: 0;
+      width: 100%; height: 100dvh;
+      border-radius: 0;
+      animation: lumiDialogInMobile 0.3s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes lumiDialogInMobile {
+      from { opacity: 0; transform: translateY(100%); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .lumi-head {
+      padding: 14px 16px;
+    }
+    .lumi-stats {
+      justify-content: flex-start;
+    }
+    .lumi-stat-cell {
+      min-width: 65px;
+      padding: 8px 6px;
+    }
+    .lumi-stat-val { font-size: 13px; }
+    .lumi-stat-lbl { font-size: 8px; }
+    .lumi-input-area {
+      padding: 8px 12px 12px;
+    }
+    .lumi-bbl {
+      max-width: 90%;
+    }
+  }
 `;
 
 // ── Component ─────────────────────────────────────────────────────────────────

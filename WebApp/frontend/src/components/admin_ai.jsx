@@ -351,6 +351,7 @@ const css = `
     max-width: 84%;
     padding: 11px 14px; border-radius: 16px;
     transition: transform 0.15s ease;
+    word-break: break-word; /* Prevent text overflow on small devices */
   }
   .aria-bbl:hover { transform: translateY(-1px); }
   .aria-bbl.ai {
@@ -468,6 +469,41 @@ const css = `
 
   /* Sync spinning */
   .aria-sync-spin { animation: spin 0.7s linear infinite; }
+
+  /* ── RESPONSIVENESS FOR MOBILE DEVICES ── */
+  @media (max-width: 600px) {
+    .aria-fab {
+      bottom: 16px; 
+      right: 16px;
+    }
+    .aria-tip {
+      bottom: 80px; 
+      right: 16px;
+    }
+    .aria-dialog {
+      width: 100%;
+      height: 100vh; /* Fallback for older browsers */
+      height: 100dvh; /* Dynamic viewport height for modern mobile browsers */
+      bottom: 0;
+      right: 0;
+      border-radius: 0;
+      animation: dialogInMobile 0.35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes dialogInMobile {
+      from { opacity: 0; transform: translateY(100%); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .aria-head {
+      padding: 14px 16px 12px;
+    }
+    .aria-input-area {
+      padding: 8px 10px 12px;
+    }
+    .aria-qchip {
+      font-size: 10px;
+      padding: 5px 10px;
+    }
+  }
 `;
 
 export default function ARIABubble() {

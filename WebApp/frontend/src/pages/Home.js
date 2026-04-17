@@ -8,12 +8,18 @@ const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .home-root { font-family: 'Inter', sans-serif; background: #f7f7f8; min-height: 100vh; }
+  .home-root { 
+    font-family: 'Inter', sans-serif; 
+    background: #f7f7f8; 
+    min-height: 100vh;
+    padding: 16px; /* Added padding to prevent edges touching on smaller screens */
+  }
 
   /* ── Quick actions ── */
   .home-actions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* Responsive grid: creates columns automatically based on screen width */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 14px;
     margin-bottom: 28px;
   }
@@ -88,6 +94,27 @@ const styles = `
   }
 
   .home-tab:not(.active):hover { background: #f5f5f5; color: #333; }
+
+  /* ── Responsive adjustments for mobile devices ── */
+  @media (max-width: 600px) {
+    .home-root {
+      padding: 12px;
+    }
+    
+    .home-actions {
+      grid-template-columns: 1fr; /* Stack cards vertically on phones */
+    }
+
+    .home-tabs {
+      width: 100%; /* Tabs take full width on mobile */
+      justify-content: space-between;
+    }
+
+    .home-tab {
+      flex: 1; /* Make both tabs equal width */
+      justify-content: center;
+    }
+  }
 `;
 
 const actions = [
