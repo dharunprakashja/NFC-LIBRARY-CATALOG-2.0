@@ -1,6 +1,6 @@
 const express = require('express');
 const Account = require('../models/account');
-const Book = require('../models/book.js');
+const Book = require('../models/book');
 const router = express.Router();
 
 // ── In-memory session store ───────────────────────────────────────────────────
