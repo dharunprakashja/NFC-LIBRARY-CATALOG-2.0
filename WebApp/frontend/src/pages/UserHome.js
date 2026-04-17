@@ -33,6 +33,13 @@ const fmtShort = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-di
 const dLeft = (d) => d ? Math.ceil((new Date(d) - new Date()) / 86400000) : null;
 const dim = (y, m) => new Date(y, m + 1, 0).getDate();
 
+function getMaskedMobile(mobile) {
+  if (!mobile) return "—";
+  const str = String(mobile).trim();
+  if (str.length <= 5) return "•••••";
+  return str.slice(0, -5) + "•••••";
+}
+
 function byMonth(dates = []) {
   const m = {};
   dates.forEach(r => {
@@ -278,6 +285,12 @@ const css = `
   .udc-ov-ico svg { width:15px; height:15px; }
   .udc-ov-n { font-family: 'Inter', sans-serif; ; font-size:21px; font-weight:700; color:var(--ink); line-height:1; }
   .udc-ov-l { font-size:11px; color:var(--ink3); margin-top:3px; }
+
+  .udc-mobile-container { cursor: help; }
+  .udc-mobile-masked { display: inline; letter-spacing: 0.5px; }
+  .udc-mobile-visible { display: none; }
+  .udc-mobile-container:hover .udc-mobile-masked { display: none; }
+  .udc-mobile-container:hover .udc-mobile-visible { display: inline; }
 
   /* ── Borrowed books ── */
   .udc-list { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
@@ -673,15 +686,24 @@ export default function UserDashboard() {
           <div className="udc-ov">
             {[
               { ico: <Ico.Trend />, bg: "#f0fdf4", ic: "#16a34a", v: account.no_of_days ?? 0, l: "Days Attended" },
-              { ico: <Ico.Phone />, bg: "#fdf4ff", ic: "#9333ea", v: account.mobile || "—", l: "Mobile", sm: true },
+              { ico: <Ico.Phone />, bg: "#fdf4ff", ic: "#9333ea", v: account.mobile, l: "Mobile", sm: true, mobile: true },
               { ico: <Ico.Lib />, bg: "#fffbeb", ic: "#d97706", v: books.length, l: "Library Books" },
               { ico: <Ico.Book />, bg: "#eff6ff", ic: "#2563eb", v: books.filter(b => b.available_pieces > 0).length, l: "Available Now" },
-            ].map(({ ico, bg, ic, v, l, sm }) => (
+            ].map(({ ico, bg, ic, v, l, sm, mobile }) => (
               <div key={l} className="udc-ov-box">
                 <div className="udc-ov-ico" style={{ background: bg }}>
                   <span style={{ color: ic, display: "flex" }}>{ico}</span>
                 </div>
-                <div className="udc-ov-n" style={sm ? { fontSize: 13, marginTop: 3 } : {}}>{v}</div>
+                <div className="udc-ov-n" style={sm ? { fontSize: 13, marginTop: 3 } : {}}>
+                  {mobile && v ? (
+                    <span className="udc-mobile-container" title="Hover to reveal full number">
+                      <span className="udc-mobile-masked">{getMaskedMobile(v)}</span>
+                      <span className="udc-mobile-visible">{v}</span>
+                    </span>
+                  ) : (
+                    v || "—"
+                  )}
+                </div>
                 <div className="udc-ov-l">{l}</div>
               </div>
             ))}

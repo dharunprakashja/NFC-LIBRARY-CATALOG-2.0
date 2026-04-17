@@ -12,19 +12,26 @@ const COLORS = [
   ["#831843", "#be185d"], ["#7c2d12", "#c2410c"],
   ["#14532d", "#15803d"], ["#1c3a5e", "#0369a1"],
 ];
-const avatarColor  = (name) => COLORS[(name?.charCodeAt(0) || 65) % COLORS.length];
-const firstLetter  = (name) => name?.trim()?.[0]?.toUpperCase() || "?";
-const passportH    = (w)    => Math.round(w * (45 / 35));
-const daysLeft     = (due)  => due ? Math.ceil((new Date(due) - new Date()) / 86400000) : null;
-const dueClass     = (due)  => { const d = daysLeft(due); return d===null?"ok":d<0?"over":d<=3?"soon":"ok"; };
-const fmtDate      = (d)    => d ? new Date(d).toLocaleDateString("en-IN",{day:"2-digit",month:"short"}) : "—";
-const dueLabel     = (due)  => {
+const avatarColor = (name) => COLORS[(name?.charCodeAt(0) || 65) % COLORS.length];
+const firstLetter = (name) => name?.trim()?.[0]?.toUpperCase() || "?";
+const passportH = (w) => Math.round(w * (45 / 35));
+const daysLeft = (due) => due ? Math.ceil((new Date(due) - new Date()) / 86400000) : null;
+const dueClass = (due) => { const d = daysLeft(due); return d === null ? "ok" : d < 0 ? "over" : d <= 3 ? "soon" : "ok"; };
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—";
+const dueLabel = (due) => {
   const d = daysLeft(due);
-  if (d===null) return "—";
-  if (d<0)  return `${Math.abs(d)}d overdue`;
-  if (d===0) return "Due today";
+  if (d === null) return "—";
+  if (d < 0) return `${Math.abs(d)}d overdue`;
+  if (d === 0) return "Due today";
   return `Due ${fmtDate(due)}`;
 };
+
+function getMaskedMobile(mobile) {
+  if (!mobile) return "";
+  const str = String(mobile).trim();
+  if (str.length <= 5) return "•••••";
+  return str.slice(0, -5) + "•••••";
+}
 
 // ── Live clock hook ───────────────────────────────────────────────────────────
 function useClock() {
@@ -120,6 +127,12 @@ const styles = `
   .at-name { font-size:17px; font-weight:700; color:#111; line-height:1.2; margin-bottom:4px; }
   .at-dept { font-size:12px; color:#888; margin-bottom:2px; }
   .at-roll { font-size:11px; color:#bbb; font-weight:500; margin-bottom:12px; }
+
+  .at-mobile-container { cursor: help; }
+  .at-mobile-masked { display: inline; letter-spacing: 0.5px; }
+  .at-mobile-visible { display: none; }
+  .at-mobile-container:hover .at-mobile-masked { display: none; }
+  .at-mobile-container:hover .at-mobile-visible { display: inline; }
 
   .at-status {
     display: inline-flex; align-items:center; gap:5px;
@@ -222,30 +235,30 @@ const styles = `
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const NfcIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/>
-    <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/>
-    <path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/>
-    <path d="M16.37 2a20.16 20.16 0 0 1 0 20"/>
+    <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36" />
+    <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58" />
+    <path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8" />
+    <path d="M16.37 2a20.16 20.16 0 0 1 0 20" />
   </svg>
 );
 const CheckIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12"/>
+    <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 const ClockIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
 // ── PassportPhoto ─────────────────────────────────────────────────────────────
 function PassportPhoto({ account, width = 96 }) {
   const [imgError, setImgError] = useState(false);
-  const [c1, c2]  = avatarColor(account?.name);
-  const imageUrl  = profileImgUrl(account?.profile_image);
-  const height    = passportH(width);
-  const fontSize  = Math.round(width * 0.36);
+  const [c1, c2] = avatarColor(account?.name);
+  const imageUrl = profileImgUrl(account?.profile_image);
+  const height = passportH(width);
+  const fontSize = Math.round(width * 0.36);
 
   useEffect(() => { setImgError(false); }, [account?.profile_image]);
 
@@ -283,7 +296,7 @@ function AttendanceDots({ dates = [] }) {
           <div
             key={i}
             className={`at-dot ${present ? "present" : "absent"}`}
-            title={d.toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}
+            title={d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
           >
             {d.getDate()}
           </div>
@@ -305,14 +318,14 @@ export default function AttendanceDisplay() {
     return () => { socket.off('nfcDataReceived'); };
   }, []);
 
-  const account       = nfcData?.account || nfcData?.student || null;
-  const message       = nfcData?.message || "";
+  const account = nfcData?.account || nfcData?.student || null;
+  const message = nfcData?.message || "";
   const alreadyMarked = message.toLowerCase().includes("already");
-  const borrowed      = account?.borrowed_books || [];
-  const attendance    = account?.attendance || [];
+  const borrowed = account?.borrowed_books || [];
+  const attendance = account?.attendance || [];
 
-  const timeStr = now.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true });
-  const dateStr = now.toLocaleDateString("en-IN", { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
+  const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+  const dateStr = now.toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <>
@@ -338,7 +351,16 @@ export default function AttendanceDisplay() {
                   <div className="at-name">{account.name}</div>
                   <div className="at-dept">{account.department}</div>
                   <div className="at-roll">
-                    {account.roll_no}{account.mobile ? ` · ${account.mobile}` : ""}
+                    {account.roll_no}
+                    {account.mobile ? (
+                      <>
+                        {" · "}
+                        <span className="at-mobile-container" title="Hover to reveal full number">
+                          <span className="at-mobile-masked">{getMaskedMobile(account.mobile)}</span>
+                          <span className="at-mobile-visible">{account.mobile}</span>
+                        </span>
+                      </>
+                    ) : ""}
                   </div>
                   <div className={`at-status ${alreadyMarked ? "already" : "success"}`}>
                     {alreadyMarked ? <ClockIcon /> : <CheckIcon />}

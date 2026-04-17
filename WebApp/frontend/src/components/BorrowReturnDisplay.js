@@ -33,6 +33,13 @@ const firstLetter = (name) => name?.trim()?.[0]?.toUpperCase() || "?";
 const passportH = (w) => Math.round(w * (45 / 35));
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+function getMaskedMobile(mobile) {
+  if (!mobile) return "";
+  const str = String(mobile).trim();
+  if (str.length <= 5) return "•••••";
+  return str.slice(0, -5) + "•••••";
+}
+
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -116,6 +123,12 @@ const styles = `
   .br-name { font-size:17px; font-weight:700; color:#111; line-height:1.2; margin-bottom:4px; }
   .br-dept { font-size:12px; color:#888; margin-bottom:2px; }
   .br-roll { font-size:11px; color:#bbb; font-weight:500; margin-bottom:14px; }
+
+  .br-mobile-container { cursor: help; }
+  .br-mobile-masked { display: inline; letter-spacing: 0.5px; }
+  .br-mobile-visible { display: none; }
+  .br-mobile-container:hover .br-mobile-masked { display: none; }
+  .br-mobile-container:hover .br-mobile-visible { display: inline; }
 
   /* Books out stat */
   .br-stat-chip {
@@ -371,7 +384,16 @@ export default function BorrowReturnDisplay() {
                   <div className="br-name">{accountData.name}</div>
                   <div className="br-dept">{accountData.department}</div>
                   <div className="br-roll">
-                    {accountData.roll_no}{accountData.mobile ? ` · ${accountData.mobile}` : ""}
+                    {accountData.roll_no}
+                    {accountData.mobile ? (
+                      <>
+                        {" · "}
+                        <span className="br-mobile-container" title="Hover to reveal full number">
+                          <span className="br-mobile-masked">{getMaskedMobile(accountData.mobile)}</span>
+                          <span className="br-mobile-visible">{accountData.mobile}</span>
+                        </span>
+                      </>
+                    ) : ""}
                   </div>
 
                   <div className="br-stat-chip">

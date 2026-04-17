@@ -1,5 +1,5 @@
 ### NFC Data Test - Student
-POST  https://damon-pseudoconservative-laryngeally.ngrok-free.dev/attendance
+POST  http://localhost:5000/attendance
 Content-Type: application/json
 
 {

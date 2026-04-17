@@ -62,15 +62,15 @@ app.use((err, req, res, next) => {
 
 // WebSocket Event Handlers
 io.on('connection', (socket) => {
-  console.log('🔗 A new client connected:', socket.id);
+  console.log(' A new client connected:', socket.id);
 
   socket.on('disconnect', () => {
-    console.log('❌ Client disconnected:', socket.id);
+    console.log(' Client disconnected:', socket.id);
   });
 
   // Example custom WebSocket event
   socket.on('customEvent', (data) => {
-    console.log('📩 Received custom event:', data);
+    console.log(' Received custom event:', data);
     io.emit('responseEvent', { message: 'Acknowledged', receivedData: data });
   });
 });
@@ -78,23 +78,23 @@ io.on('connection', (socket) => {
 // Notification Sending Logic
 const initializeNotifications = async () => {
   try {
-    console.log('🔔 Sending notifications...');
+    console.log(' Sending notifications...');
     await sendNotifications(); // Call your notification controller
-    console.log('✅ Notifications sent successfully');
+    console.log(' Notifications sent successfully');
   } catch (error) {
-    console.error('❌ Failed to send notifications:', error.message);
+    console.error(' Failed to send notifications:', error.message);
   }
 };
 
 // Set up periodic notification sending (e.g., once a day at midnight using cron)
 cron.schedule('0 0 * * *', () => {
-  console.log('🔔 Sending daily notifications...');
+  console.log('Sending daily notifications...');
   initializeNotifications();
 });
 
 // Set up daily fine updating (e.g., at midnight using cron)
 cron.schedule('0 0 * * *', () => {
-  console.log('🔧 Updating student fines...');
+  console.log(' Updating student fines...');
   updateAllStudentsFines();
 });
 
@@ -102,8 +102,8 @@ cron.schedule('0 0 * * *', () => {
 const PORT = 5000;
 server.listen(PORT, () => {
   const serverIP = ip.address();
-  console.log(`🚀 Server is running on http://${serverIP}:${PORT}`);
-  console.log(`🌐 WebSocket server listening on ws://${serverIP}:${PORT}`);
+  console.log(`Server is running on http://${serverIP}:${PORT}`);
+  console.log(`WebSocket server listening on ws://${serverIP}:${PORT}`);
 
   // Trigger initial fine update and notification sending
   updateAllStudentsFines();
