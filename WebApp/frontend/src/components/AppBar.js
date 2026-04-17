@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { accountImageUrl } from '../api';
 
 // ── Session helpers ────────────────────────────────────────────────────────────
 const session = {
@@ -333,60 +334,60 @@ const styles = `
 const Icons = {
   Menu: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
     </svg>
   ),
   Home: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   ),
   Attendance: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
     </svg>
   ),
   Borrow: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
     </svg>
   ),
   Return: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.45"/>
+      <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.45" />
     </svg>
   ),
   Users: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
   Books: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
   ),
   Reports: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-      <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" />
     </svg>
   ),
   Profile: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
     </svg>
   ),
   Logout: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
   Fine: () => (
     <svg className="ab-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   ),
 };
@@ -439,16 +440,16 @@ function Avatar({ name, src, size = 36, fontSize = 15 }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AppBarComponent = ({ children }) => {
-  const [drawerOpen, setDrawerOpen]   = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(null);
   const navigate = useNavigate();
 
   // Read from sessionStorage
-  const name       = session.get("name");
-  const rollNo     = session.get("roll_no");
+  const name = session.get("name");
+  const rollNo = session.get("roll_no");
   const department = session.get("department");
-  const isAdmin    = session.isAdmin();
+  const isAdmin = session.isAdmin();
 
   // ── Fetch profile image on mount ───────────────────────────────────────────
   useEffect(() => {
@@ -459,8 +460,7 @@ const AppBarComponent = ({ children }) => {
       return;
     }
 
-    // Build the full URL: http://localhost:5000/image/account/<filename>
-    const imageUrl = `http://localhost:5000/image/account/${storedImage}`;
+    const imageUrl = accountImageUrl(storedImage);
     setProfileImageUrl(imageUrl);
   }, []);
 
@@ -476,19 +476,19 @@ const AppBarComponent = ({ children }) => {
 
   // ── Nav items per role ──────────────────────────────────────────────────────
   const userNavItems = [
-    { label: 'Home',        icon: <Icons.Home />,       path: '/' },
+    { label: 'Home', icon: <Icons.Home />, path: '/' },
     // { label: 'Attendance',  icon: <Icons.Attendance />, path: '/attendance' },
     // { label: 'Borrow Book', icon: <Icons.Borrow />,     path: '/borrow-book' },
     // { label: 'Return Book', icon: <Icons.Return />,     path: '/return-book' },
   ];
 
   const adminNavItems = [
-    { label: 'Dashboard',    icon: <Icons.Home />,      path: '/' },
-    { label: 'Manage Books', icon: <Icons.Books />,     path: '/manage-books' },
-    { label: 'Manage Users', icon: <Icons.Users />,     path: '/manage-users' },
-    { label: 'Attendance',   icon: <Icons.Attendance />,path: '/attendance' },
-    { label: 'Fines',        icon: <Icons.Fine />,      path: '/fines' },
-    { label: 'Reports',      icon: <Icons.Reports />,   path: '/reports' },
+    { label: 'Dashboard', icon: <Icons.Home />, path: '/' },
+    { label: 'Manage Books', icon: <Icons.Books />, path: '/manage-books' },
+    { label: 'Manage Users', icon: <Icons.Users />, path: '/manage-users' },
+    { label: 'Attendance', icon: <Icons.Attendance />, path: '/attendance' },
+    { label: 'Fines', icon: <Icons.Fine />, path: '/fines' },
+    { label: 'Reports', icon: <Icons.Reports />, path: '/reports' },
   ];
 
   const navItems = isAdmin ? adminNavItems : userNavItems;

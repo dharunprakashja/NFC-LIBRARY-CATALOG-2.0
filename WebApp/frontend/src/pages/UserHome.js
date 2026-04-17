@@ -1,21 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-
-axios.defaults.baseURL = "http://localhost:5000";
+import { api, accountImageUrl, bookImageUrl } from "../api";
 
 // ─── URL Builders (matching original pattern from doc) ───────────────────────
-const profileImgUrl = (img) => img ? `http://localhost:5000/image/account/${img}` : null;
+const profileImgUrl = (img) => accountImageUrl(img);
 const bookCoverUrl = (img) => {
-  if (!img) return null;
-
-  const value = String(img).trim();
-  if (!value) return null;
-
-  if (/^(https?:)?\/\//i.test(value) || value.startsWith("data:")) return value;
-  if (value.startsWith("/")) return `http://localhost:5000${value}`;
-  if (value.startsWith("image/")) return `http://localhost:5000/${value}`;
-
-  return `http://localhost:5000/image/book/${encodeURI(value)}`;
+  return bookImageUrl(img);
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -582,7 +571,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     if (!rollNo) { setError("No session found."); setLoading(false); return; }
-    Promise.all([axios.get(`/account/${rollNo}`), axios.get("/book")])
+    Promise.all([api.get(`/account/${rollNo}`), api.get("/book")])
       .then(([ar, br]) => {
         const acc = ar.data.account || ar.data;
         const bks = br.data.books || [];

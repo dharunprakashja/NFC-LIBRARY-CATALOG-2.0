@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography } from '@mui/material';
 import io from 'socket.io-client';
+import { SOCKET_URL } from './api';
 
-const socket = io('http://localhost:5000'); // Adjust the URL as needed
+const socket = io(SOCKET_URL);
 
 function AttendanceCard() {
   const [students, setStudents] = useState([]);

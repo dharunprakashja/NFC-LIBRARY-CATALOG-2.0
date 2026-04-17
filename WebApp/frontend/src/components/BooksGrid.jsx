@@ -1,28 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-
-axios.defaults.baseURL = "http://localhost:5000";
-
-const BASE_COVER_URL = "http://localhost:5000/image/book/";
+import { api, bookImageUrl } from "../api";
 
 // Accept both remote links and local filenames stored in backend image/book folder.
 function getCoverImageUrl(value) {
-  if (!value) return null;
-
-  const imageValue = String(value).trim();
-  if (!imageValue) return null;
-
-  // Full URLs or data URLs should be used directly.
-  if (/^(https?:)?\/\//i.test(imageValue) || imageValue.startsWith("data:")) {
-    return imageValue;
-  }
-
-  // Supports saved values like /image/book/file.jpg or image/book/file.jpg.
-  if (imageValue.startsWith("/")) return `http://localhost:5000${imageValue}`;
-  if (imageValue.startsWith("image/")) return `http://localhost:5000/${imageValue}`;
-
-  // Default mode: plain filename in backend image/book folder.
-  return `${BASE_COVER_URL}${encodeURI(imageValue)}`;
+  return bookImageUrl(value);
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -549,7 +530,7 @@ export default function BooksGrid() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("/book")
+    api.get("/book")
       .then(res => setBooks(res.data.books || []))
       .catch(err => console.error("Failed to fetch books", err))
       .finally(() => setLoading(false));

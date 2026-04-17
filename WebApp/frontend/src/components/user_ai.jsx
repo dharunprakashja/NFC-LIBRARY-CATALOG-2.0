@@ -1,28 +1,26 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
-
-axios.defaults.baseURL = "http://localhost:5000";
+import { api } from "../api";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt   = (d) => d ? new Date(d).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—";
-const dLeft = (d) => d ? Math.ceil((new Date(d)-new Date())/86400000) : null;
-const tStr  = (d) => d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const dLeft = (d) => d ? Math.ceil((new Date(d) - new Date()) / 86400000) : null;
+const tStr = (d) => d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
 // ── System prompt — USER-SCOPED, privacy-safe ─────────────────────────────────
 function buildUserSystemPrompt(user, catalogue) {
-  const now          = new Date();
-  const borrowed     = user.borrowed_books || [];
-  const attendance   = user.attendance     || [];
-  const fine         = user.total_fine     || 0;
+  const now = new Date();
+  const borrowed = user.borrowed_books || [];
+  const attendance = user.attendance || [];
+  const fine = user.total_fine || 0;
 
   // Build a due-status summary for each borrowed book
   const borrowedSummary = borrowed.length === 0
     ? "None currently"
     : borrowed.map(b => {
-        const d = dLeft(b.due_date);
-        const status = d === null ? "" : d < 0 ? `⚠ ${Math.abs(d)} days OVERDUE` : d === 0 ? "⚠ Due today" : d <= 3 ? `Due in ${d} days (soon)` : `Due ${fmt(b.due_date)}`;
-        return `• "${b.title || b.book_id}" — ${status} | Fine so far: ₹${b.fine || 0}`;
-      }).join("\n");
+      const d = dLeft(b.due_date);
+      const status = d === null ? "" : d < 0 ? `⚠ ${Math.abs(d)} days OVERDUE` : d === 0 ? "⚠ Due today" : d <= 3 ? `Due in ${d} days (soon)` : `Due ${fmt(b.due_date)}`;
+      return `• "${b.title || b.book_id}" — ${status} | Fine so far: ₹${b.fine || 0}`;
+    }).join("\n");
 
   // Attendance overview — last 30 days count
   const recentDays = attendance.filter(d => {
@@ -33,7 +31,7 @@ function buildUserSystemPrompt(user, catalogue) {
   // Catalogue summary (available books only — no borrowing records of others)
   const availableCatalogue = catalogue
     .filter(b => b.available_pieces > 0)
-    .map(b => `• [${b.book_id}] "${b.title}" by ${b.author}${b.genre ? ` — ${b.genre}` : ""} (${b.available_pieces} cop${b.available_pieces===1?"y":"ies"} available)`)
+    .map(b => `• [${b.book_id}] "${b.title}" by ${b.author}${b.genre ? ` — ${b.genre}` : ""} (${b.available_pieces} cop${b.available_pieces === 1 ? "y" : "ies"} available)`)
     .join("\n");
 
   const unavailableCatalogue = catalogue
@@ -60,17 +58,17 @@ ${borrowedSummary}
 
 💰 FINE STATUS
 ${fine === 0
-  ? "No outstanding fines. Great job returning books on time!"
-  : `Outstanding fine: ₹${fine}. Please return overdue books to reduce your fine.`
-}
+      ? "No outstanding fines. Great job returning books on time!"
+      : `Outstanding fine: ₹${fine}. Please return overdue books to reduce your fine.`
+    }
 
 📅 ATTENDANCE
 Total days visited: ${user.no_of_days || 0}
 Visits in last 30 days: ${recentDays}
 ${recentDays >= 20 ? "🏆 Excellent attendance! You're one of our most regular members." :
-  recentDays >= 10 ? "👍 Good attendance this month!" :
-  recentDays >= 5  ? "📖 Moderate visits this month — the library misses you!" :
-  "💡 You haven't visited much lately — there are great books waiting!"}
+      recentDays >= 10 ? "👍 Good attendance this month!" :
+        recentDays >= 5 ? "📖 Moderate visits this month — the library misses you!" :
+          "💡 You haven't visited much lately — there are great books waiting!"}
 
 ═══════════════════════════════════════════════════════════
 LIBRARY CATALOGUE (what you can help them find / borrow)
@@ -120,30 +118,30 @@ TONE & STYLE
 // ── Markdown renderer ─────────────────────────────────────────────────────────
 function MD({ text }) {
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:2}}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {text.split("\n").map((line, i) => {
         const fmt = (t) => t
-          .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g,"<em>$1</em>")
-          .replace(/`(.+?)`/g,`<code style="background:#f0f0f5;color:#1a1a2e;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace">$1</code>`);
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")
+          .replace(/`(.+?)`/g, `<code style="background:#f0f0f5;color:#1a1a2e;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace">$1</code>`);
 
         if (/^###? (.+)/.test(line)) return (
-          <div key={i} style={{fontSize:10,fontWeight:700,color:"#1a1a2e",textTransform:"uppercase",letterSpacing:"0.1em",margin:"8px 0 2px",paddingBottom:4,borderBottom:"1px solid #f0f0f0"}}>
-            {line.replace(/^###? /,"")}
+          <div key={i} style={{ fontSize: 10, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: "0.1em", margin: "8px 0 2px", paddingBottom: 4, borderBottom: "1px solid #f0f0f0" }}>
+            {line.replace(/^###? /, "")}
           </div>
         );
-        if (/^---+$/.test(line.trim())) return <div key={i} style={{height:1,background:"#f0f0f0",margin:"6px 0"}}/>;
+        if (/^---+$/.test(line.trim())) return <div key={i} style={{ height: 1, background: "#f0f0f0", margin: "6px 0" }} />;
         if (/^[•\-*] (.+)/.test(line)) return (
-          <div key={i} style={{display:"flex",gap:7,alignItems:"flex-start",marginBottom:2}}>
-            <div style={{width:4,height:4,borderRadius:"50%",background:"#1a1a2e",flexShrink:0,marginTop:7}}/>
-            <span style={{fontSize:12.5,color:"#444",lineHeight:1.6}} dangerouslySetInnerHTML={{__html:fmt(line.replace(/^[•\-*] /,""))}}/>
+          <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start", marginBottom: 2 }}>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#1a1a2e", flexShrink: 0, marginTop: 7 }} />
+            <span style={{ fontSize: 12.5, color: "#444", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: fmt(line.replace(/^[•\-*] /, "")) }} />
           </div>
         );
         if (/^\d+\. (.+)/.test(line)) return (
-          <div key={i} style={{fontSize:12.5,color:"#444",lineHeight:1.6,marginBottom:2}} dangerouslySetInnerHTML={{__html:fmt(line)}}/>
+          <div key={i} style={{ fontSize: 12.5, color: "#444", lineHeight: 1.6, marginBottom: 2 }} dangerouslySetInnerHTML={{ __html: fmt(line) }} />
         );
-        if (line.trim()==="") return <div key={i} style={{height:4}}/>;
-        return <div key={i} style={{fontSize:12.5,color:"#333",lineHeight:1.65}} dangerouslySetInnerHTML={{__html:fmt(line)}}/>;
+        if (line.trim() === "") return <div key={i} style={{ height: 4 }} />;
+        return <div key={i} style={{ fontSize: 12.5, color: "#333", lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: fmt(line) }} />;
       })}
     </div>
   );
@@ -151,12 +149,12 @@ function MD({ text }) {
 
 // ── Quick prompts personalised to common user needs ───────────────────────────
 const QUICK = [
-  { icon:"📖", label:"What books do I have?" },
-  { icon:"⏰", label:"Any books due soon?" },
-  { icon:"💰", label:"Do I owe any fines?" },
-  { icon:"🎯", label:"Recommend me a book" },
-  { icon:"📅", label:"My attendance summary" },
-  { icon:"🔍", label:"Is a specific book available?" },
+  { icon: "📖", label: "What books do I have?" },
+  { icon: "⏰", label: "Any books due soon?" },
+  { icon: "💰", label: "Do I owe any fines?" },
+  { icon: "🎯", label: "Recommend me a book" },
+  { icon: "📅", label: "My attendance summary" },
+  { icon: "🔍", label: "Is a specific book available?" },
 ];
 
 // ── CSS — matches app light theme (Inter, #1a1a2e, white cards) ───────────────
@@ -386,21 +384,21 @@ const css = `
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function UserARIABubble() {
-  const [open,      setOpen]      = useState(false);
-  const [showTip,   setShowTip]   = useState(true);
-  const [unread,    setUnread]    = useState(false);
-  const [messages,  setMessages]  = useState([]);
-  const [input,     setInput]     = useState("");
-  const [sending,   setSending]   = useState(false);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
-  const [history,   setHistory]   = useState([]);
-  const [user,      setUser]      = useState(null);
+  const [open, setOpen] = useState(false);
+  const [showTip, setShowTip] = useState(true);
+  const [unread, setUnread] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [user, setUser] = useState(null);
   const [catalogue, setCatalogue] = useState([]);
 
   const chatRef = useRef(null);
-  const taRef   = useRef(null);
-  const sysRef  = useRef("");
+  const taRef = useRef(null);
+  const sysRef = useRef("");
 
   // Hide tooltip after 4s
   useEffect(() => {
@@ -414,11 +412,11 @@ export default function UserARIABubble() {
     try {
       const rollNo = sessionStorage.getItem("roll_no");
       const [userRes, catRes] = await Promise.all([
-        axios.get(`/account/${rollNo}`),   // user's own profile only
-        axios.get("/book"),                // public catalogue
+        api.get(`/account/${rollNo}`),   // user's own profile only
+        api.get("/book"),                // public catalogue
       ]);
       const u = userRes.data.account || userRes.data;
-      const b = catRes.data.books    || [];
+      const b = catRes.data.books || [];
       setUser(u);
       setCatalogue(b);
       sysRef.current = buildUserSystemPrompt(u, b);
@@ -433,7 +431,7 @@ export default function UserARIABubble() {
 
   useEffect(() => {
     if (chatRef.current)
-      chatRef.current.scrollTo({ top: chatRef.current.scrollHeight, behavior:"smooth" });
+      chatRef.current.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
 
   const resize = (el) => {
@@ -447,17 +445,17 @@ export default function UserARIABubble() {
     if (!msg || sending) return;
     setInput(""); if (taRef.current) taRef.current.style.height = "auto";
     setError(null);
-    setMessages(p => [...p, { role:"user", content:msg, time:new Date() }]);
+    setMessages(p => [...p, { role: "user", content: msg, time: new Date() }]);
     setSending(true);
     try {
-      const res = await axios.post("/user_ai/chat", {
-        userMessage:  msg,
+      const res = await api.post("/user_ai/chat", {
+        userMessage: msg,
         history,
         systemPrompt: sysRef.current,
       });
       const { reply, history: h2 } = res.data;
       setHistory(h2);
-      setMessages(p => [...p, { role:"ai", content:reply, time:new Date() }]);
+      setMessages(p => [...p, { role: "ai", content: reply, time: new Date() }]);
       if (!open) setUnread(true);
     } catch (e) {
       setError(e?.response?.data?.message || "Request failed. Try again.");
@@ -466,15 +464,15 @@ export default function UserARIABubble() {
     }
   };
 
-  const handleOpen = () => { setOpen(o=>!o); setUnread(false); setShowTip(false); };
+  const handleOpen = () => { setOpen(o => !o); setUnread(false); setShowTip(false); };
 
   // Derived personal stats
-  const borrowed    = user?.borrowed_books || [];
-  const fine        = user?.total_fine     || 0;
-  const daysVisited = user?.no_of_days     || 0;
-  const hasOverdue  = borrowed.some(b => { const d = dLeft(b.due_date); return d !== null && d < 0; });
-  const dueSoon     = borrowed.filter(b => { const d = dLeft(b.due_date); return d !== null && d >= 0 && d <= 3; }).length;
-  const firstName   = user?.name?.split(" ")[0] || "there";
+  const borrowed = user?.borrowed_books || [];
+  const fine = user?.total_fine || 0;
+  const daysVisited = user?.no_of_days || 0;
+  const hasOverdue = borrowed.some(b => { const d = dLeft(b.due_date); return d !== null && d < 0; });
+  const dueSoon = borrowed.filter(b => { const d = dLeft(b.due_date); return d !== null && d >= 0 && d <= 3; }).length;
+  const firstName = user?.name?.split(" ")[0] || "there";
 
   return (
     <>
@@ -486,10 +484,10 @@ export default function UserARIABubble() {
       )}
 
       {/* FAB */}
-      <button className={`lumi-fab ${open?"open":""}`} onClick={handleOpen} title="LUMI — Your Library Assistant">
+      <button className={`lumi-fab ${open ? "open" : ""}`} onClick={handleOpen} title="LUMI — Your Library Assistant">
         <div className="lumi-fab-icon">{open ? "✕" : "📖"}</div>
         {!open && <div className="lumi-fab-label">LUMI</div>}
-        {unread && !open && <div className="lumi-unread"/>}
+        {unread && !open && <div className="lumi-unread" />}
       </button>
 
       {/* Dialog */}
@@ -502,13 +500,13 @@ export default function UserARIABubble() {
             <div className="lumi-head-text">
               <div className="lumi-head-name">LUMI — Your Library Buddy</div>
               <div className="lumi-online">
-                <span className="lumi-online-dot"/>
+                <span className="lumi-online-dot" />
                 Personal assistant · Your data only
               </div>
             </div>
             <button className="lumi-head-btn" title="Refresh" onClick={loadData}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
               </svg>
             </button>
             <button className="lumi-head-btn" onClick={handleOpen}>✕</button>
@@ -518,12 +516,12 @@ export default function UserARIABubble() {
           {!loading && user && (
             <div className="lumi-stats">
               {[
-                { v: borrowed.length,    l:"Borrowed", c: borrowed.length>0?"warn":"ok" },
-                { v: dueSoon,            l:"Due Soon",  c: dueSoon>0?"warn":"ok" },
-                { v: hasOverdue?"Yes":"No", l:"Overdue", c: hasOverdue?"danger":"ok" },
-                { v: `₹${fine}`,         l:"Fine",     c: fine>0?"danger":"ok" },
-                { v: daysVisited,        l:"Visits",   c:"" },
-              ].map(({v,l,c})=>(
+                { v: borrowed.length, l: "Borrowed", c: borrowed.length > 0 ? "warn" : "ok" },
+                { v: dueSoon, l: "Due Soon", c: dueSoon > 0 ? "warn" : "ok" },
+                { v: hasOverdue ? "Yes" : "No", l: "Overdue", c: hasOverdue ? "danger" : "ok" },
+                { v: `₹${fine}`, l: "Fine", c: fine > 0 ? "danger" : "ok" },
+                { v: daysVisited, l: "Visits", c: "" },
+              ].map(({ v, l, c }) => (
                 <div key={l} className="lumi-stat-cell">
                   <div className={`lumi-stat-val ${c}`}>{v}</div>
                   <div className="lumi-stat-lbl">{l}</div>
@@ -548,7 +546,7 @@ export default function UserARIABubble() {
           <div className="lumi-msgs" ref={chatRef}>
             {loading ? (
               <div className="lumi-dbl">
-                <div className="lumi-spin"/>
+                <div className="lumi-spin" />
                 <span>Loading your library data…</span>
               </div>
             ) : messages.length === 0 ? (
@@ -558,12 +556,12 @@ export default function UserARIABubble() {
                 <div className="lumi-wname">I'm LUMI, your personal library assistant</div>
                 <div className="lumi-wsub">
                   {borrowed.length > 0
-                    ? `You have ${borrowed.length} book${borrowed.length>1?"s":""} borrowed${fine>0?` and ₹${fine} in fines`:""}. Ask me anything!`
+                    ? `You have ${borrowed.length} book${borrowed.length > 1 ? "s" : ""} borrowed${fine > 0 ? ` and ₹${fine} in fines` : ""}. Ask me anything!`
                     : "You have no books borrowed right now. Want a recommendation?"}
                 </div>
                 <div className="lumi-quick">
-                  {QUICK.map((q,i)=>(
-                    <button key={i} className="lumi-qchip" onClick={()=>send(q.label)}>
+                  {QUICK.map((q, i) => (
+                    <button key={i} className="lumi-qchip" onClick={() => send(q.label)}>
                       <span>{q.icon}</span>{q.label}
                     </button>
                   ))}
@@ -571,13 +569,13 @@ export default function UserARIABubble() {
               </div>
             ) : (
               messages.map((msg, i) => (
-                <div key={i} className={`lumi-row ${msg.role==="user"?"user":""}`}>
+                <div key={i} className={`lumi-row ${msg.role === "user" ? "user" : ""}`}>
                   <div className={`lumi-av ${msg.role}`}>
-                    {msg.role==="ai" ? "📖" : firstName[0].toUpperCase()}
+                    {msg.role === "ai" ? "📖" : firstName[0].toUpperCase()}
                   </div>
-                  <div style={{maxWidth:"84%"}}>
+                  <div style={{ maxWidth: "84%" }}>
                     <div className={`lumi-bbl ${msg.role}`}>
-                      {msg.role==="ai" ? <MD text={msg.content}/> : msg.content}
+                      {msg.role === "ai" ? <MD text={msg.content} /> : msg.content}
                     </div>
                     <div className="lumi-ts">{tStr(msg.time)}</div>
                   </div>
@@ -588,7 +586,7 @@ export default function UserARIABubble() {
               <div className="lumi-typing-row">
                 <div className="lumi-av ai">📖</div>
                 <div className="lumi-typing-bbl">
-                  <div className="lumi-tdot"/><div className="lumi-tdot"/><div className="lumi-tdot"/>
+                  <div className="lumi-tdot" /><div className="lumi-tdot" /><div className="lumi-tdot" />
                 </div>
               </div>
             )}
@@ -604,18 +602,18 @@ export default function UserARIABubble() {
                   placeholder={`Ask me about your books, ${firstName}…`}
                   value={input} rows={1}
                   disabled={sending || loading}
-                  onChange={e=>{ setInput(e.target.value); resize(e.target); }}
-                  onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input);} }}
+                  onChange={e => { setInput(e.target.value); resize(e.target); }}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
                 />
               </div>
               <button
                 className="lumi-send-btn"
-                onClick={()=>send(input)}
-                disabled={!input.trim()||sending||loading}
+                onClick={() => send(input)}
+                disabled={!input.trim() || sending || loading}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
               </button>
             </div>

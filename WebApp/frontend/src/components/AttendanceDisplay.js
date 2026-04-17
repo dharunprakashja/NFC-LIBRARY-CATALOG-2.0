@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import MembersGrid from './MembersGrid';
+import { SOCKET_URL, accountImageUrl } from '../api';
 
-const socket = io('http://localhost:5000');
+const socket = io(SOCKET_URL);
 
-const profileImgUrl = (img) => img ? `http://localhost:5000/image/account/${img}` : null;
+const profileImgUrl = (img) => accountImageUrl(img);
 
 const COLORS = [
   ["#1a1a2e", "#16213e"], ["#134e4a", "#0f766e"],

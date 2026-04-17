@@ -1,9 +1,11 @@
+@baseUrl = http://localhost:5000
+
 ### ─────────────────────────────────────────
 ### ACCOUNT ROUTES - REST CLIENT
 ### ─────────────────────────────────────────
 
 ### Sign In
-POST http://localhost:5000/account/signin
+POST {{baseUrl}}/account/signin
 Content-Type: application/json
 
 {
@@ -14,7 +16,7 @@ Content-Type: application/json
 ###
 
 ### Register a New Account (Normal User)
-POST http://localhost:5000/account/register
+POST {{baseUrl}}/account/register
 Content-Type: application/json
 
 [
@@ -167,7 +169,7 @@ Content-Type: application/json
 ###
 
 ### Register a New Account (Admin User)
-POST http://localhost:5000/account/register
+POST {{baseUrl}}/account/register
 Content-Type: application/json
 
 {
@@ -183,19 +185,19 @@ Content-Type: application/json
 ###
 
 ### Get All Accounts
-GET http://localhost:5000/account/
+GET {{baseUrl}}/account/
 Content-Type: application/json
 
 ###
 
 ### Get Single Account by Roll No
-GET http://localhost:5000/account/CS2021001
+GET {{baseUrl}}/account/CS2021001
 Content-Type: application/json
 
 ###
 
 ### Update Account (Partial Update)
-PUT http://localhost:5000/account/CS2021001
+PUT {{baseUrl}}/account/CS2021001
 Content-Type: application/json
 
 {
@@ -207,7 +209,7 @@ Content-Type: application/json
 ###
 
 ### Update Account Password
-PUT http://localhost:5000/account/CS2021001
+PUT {{baseUrl}}/account/CS2021001
 Content-Type: application/json
 
 {
@@ -217,7 +219,7 @@ Content-Type: application/json
 ###
 
 ### Update Profile Image
-PUT http://localhost:5000/account/CS2021001
+PUT {{baseUrl}}/account/CS2021001
 Content-Type: application/json
 
 {
@@ -227,7 +229,7 @@ Content-Type: application/json
 ###
 
 ### Promote Account to Admin
-PUT http://localhost:5000/account/CS2021001
+PUT {{baseUrl}}/account/CS2021001
 Content-Type: application/json
 
 {
@@ -237,7 +239,7 @@ Content-Type: application/json
 ###
 
 ### Delete Account
-DELETE http://localhost:5000/account/CS2021001
+DELETE {{baseUrl}}/account/CS2021001
 Content-Type: application/json
 
 
@@ -246,19 +248,19 @@ Content-Type: application/json
 ### ─────────────────────────────────────────
 
 ### Get All Books
-GET http://localhost:5000/book/
+GET {{baseUrl}}/book/
 Content-Type: application/json
 
 ###
 
 ### Get Single Book by ID
-GET http://localhost:5000/book/BK001
+GET {{baseUrl}}/book/BK001
 Content-Type: application/json
 
 ###
 
 ### Create a New Book
-POST http://localhost:5000/book/
+POST {{baseUrl}}/book/
 Content-Type: application/json
 
 [
@@ -447,7 +449,7 @@ Content-Type: application/json
 ###
 
 ### Create Another Book (no cover image)
-POST http://localhost:5000/book/
+POST {{baseUrl}}/book/
 Content-Type: application/json
 
 {
@@ -461,7 +463,7 @@ Content-Type: application/json
 ###
 
 ### Update Book Details
-PUT http://localhost:5000/book/BK001
+PUT {{baseUrl}}/book/BK001
 Content-Type: application/json
 
 {
@@ -474,7 +476,7 @@ Content-Type: application/json
 ###
 
 ### Update Only Cover Image
-PUT http://localhost:5000/book/BK001
+PUT {{baseUrl}}/book/BK001
 Content-Type: application/json
 
 {
@@ -484,7 +486,7 @@ Content-Type: application/json
 ###
 
 ### Borrow a Book
-POST http://localhost:5000/book/BK001/borrow
+POST {{baseUrl}}/book/BK001/borrow
 Content-Type: application/json
 
 {
@@ -495,7 +497,7 @@ Content-Type: application/json
 ###
 
 ### Borrow Same Book - Different Member
-POST http://localhost:5000/book/BK001/borrow
+POST {{baseUrl}}/book/BK001/borrow
 Content-Type: application/json
 
 {
@@ -506,7 +508,7 @@ Content-Type: application/json
 ###
 
 ### Return a Book
-POST http://localhost:5000/book/BK001/return
+POST {{baseUrl}}/book/BK001/return
 Content-Type: application/json
 
 {
@@ -516,11 +518,11 @@ Content-Type: application/json
 ###
 
 ### Delete a Book
-DELETE http://localhost:5000/book/BK001
+DELETE {{baseUrl}}/book/BK001
 Content-Type: application/json
 
 ### Bulk Create Books
-POST http://localhost:5000/book/bulk
+POST {{baseUrl}}/book/bulk
 Content-Type: application/json
 
 {
@@ -554,7 +556,7 @@ Content-Type: application/json
       "author": "Someone",
       "total_pieces": 2
     },
-    {
+    { 
       "title": "Missing Fields Test",
       "author": "Someone"
     }

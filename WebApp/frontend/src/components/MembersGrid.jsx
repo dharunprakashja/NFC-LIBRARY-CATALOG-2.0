@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
-
-axios.defaults.baseURL = "http://localhost:5000";
-
-const BASE_IMAGE_URL = "http://localhost:5000/image/account/";
+import { api, accountImageUrl } from "../api";
 
 // ── Build full profile image URL from filename ─────────────────────────────────
 function getProfileImageUrl(filename) {
-  if (!filename) return null;
-  return `${BASE_IMAGE_URL}${filename}`;
+  return accountImageUrl(filename);
 }
 
 // ── Color palette (Expanded to 16 pairs for more variety) ──────────────────────
@@ -56,7 +51,7 @@ function formatDate(d) {
 function getMaskedMobile(mobile) {
   if (!mobile) return "—";
   const str = String(mobile).trim();
-  if (str.length <= 5) return "•••••"; 
+  if (str.length <= 5) return "•••••";
   return str.slice(0, -5) + "•••••";
 }
 
@@ -502,8 +497,8 @@ function MemberModal({ member, onClose }) {
           <button className="mg-close" onClick={onClose}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -599,13 +594,13 @@ function MemberModal({ member, onClose }) {
 
 // ── MembersGrid ───────────────────────────────────────────────────────────────
 export default function MembersGrid() {
-  const [members,  setMembers]  = useState([]);
-  const [search,   setSearch]   = useState("");
+  const [members, setMembers] = useState([]);
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("/account")
+    api.get("/account")
       .then(res => setMembers(res.data.accounts || []))
       .catch(err => console.error("Failed to fetch members:", err))
       .finally(() => setLoading(false));
@@ -628,13 +623,13 @@ export default function MembersGrid() {
       for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
-      
+
       let colorIdx = Math.abs(hash) % COLORS.length;
-      
+
       if (colorIdx === prevColorIdx) {
         colorIdx = (colorIdx + 1) % COLORS.length;
       }
-      
+
       prevColorIdx = colorIdx;
       return { ...member, colorPair: COLORS[colorIdx] };
     });
@@ -697,15 +692,15 @@ export default function MembersGrid() {
                     <div className="mg-info-row">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
                       </svg>
                       {member.roll_no}
                     </div>
                     <div className="mg-info-row">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 9a16 16 0 0 0 6 6l.36-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 9a16 16 0 0 0 6 6l.36-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                       </svg>
                       {member.mobile ? (
                         <span className="mg-mobile-container" title="Hover to reveal full number">
@@ -717,8 +712,8 @@ export default function MembersGrid() {
                     <div className="mg-info-row">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                       </svg>
                       {(member.borrowed_books || []).length} book(s) borrowed
                     </div>

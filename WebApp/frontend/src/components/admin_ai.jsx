@@ -1,37 +1,35 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import { api } from "../api";
 
-axios.defaults.baseURL = "http://localhost:5000";
-
-const fmt   = (d) => d ? new Date(d).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—";
-const dLeft = (d) => d ? Math.ceil((new Date(d)-new Date())/86400000) : null;
-const tStr  = (d) => d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const dLeft = (d) => d ? Math.ceil((new Date(d) - new Date()) / 86400000) : null;
+const tStr = (d) => d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
 function buildSystemPrompt(books, members) {
-  const now             = new Date();
-  const totalCopies     = books.reduce((s,b)=>s+(b.total_pieces||0),0);
-  const availableCopies = books.reduce((s,b)=>s+(b.available_pieces||0),0);
-  const genres          = [...new Set(books.map(b=>b.genre).filter(Boolean))];
-  const mostBorrowed    = [...books].sort((a,b)=>(b.borrowed_by?.length||0)-(a.borrowed_by?.length||0)).slice(0,5);
-  const totalFineAmt    = members.reduce((s,m)=>s+(m.total_fine||0),0);
-  const overdueBorrowers= members.filter(m=>(m.borrowed_books||[]).some(bk=>{ const n=dLeft(bk.due_date); return n!==null&&n<0; }));
-  const depts           = [...new Set(members.map(m=>m.department).filter(Boolean))];
-  const highAttend      = [...members].sort((a,b)=>(b.no_of_days||0)-(a.no_of_days||0)).slice(0,5);
-  const bookCatalogue   = books.map(b=>`• [${b.book_id}] "${b.title}" by ${b.author}${b.genre?` (${b.genre})`:""} — ${b.available_pieces}/${b.total_pieces} available`).join("\n");
-  const memberRoster    = members.map(m=>`• ${m.name} [${m.roll_no}] | ${m.department} | ${(m.borrowed_books||[]).length} books | Fine: ₹${m.total_fine||0}`+((m.borrowed_books||[]).length>0?` | ${m.borrowed_books.map(bk=>`"${bk.title||bk.book_id}" due ${fmt(bk.due_date)}`).join(", ")}`:"")).join("\n");
-  const overdueDetails  = overdueBorrowers.flatMap(m=>m.borrowed_books.filter(bk=>{const n=dLeft(bk.due_date);return n!==null&&n<0;}).map(bk=>`• ${m.name} [${m.roll_no}] — "${bk.title||bk.book_id}" ${Math.abs(dLeft(bk.due_date))}d overdue`)).join("\n");
+  const now = new Date();
+  const totalCopies = books.reduce((s, b) => s + (b.total_pieces || 0), 0);
+  const availableCopies = books.reduce((s, b) => s + (b.available_pieces || 0), 0);
+  const genres = [...new Set(books.map(b => b.genre).filter(Boolean))];
+  const mostBorrowed = [...books].sort((a, b) => (b.borrowed_by?.length || 0) - (a.borrowed_by?.length || 0)).slice(0, 5);
+  const totalFineAmt = members.reduce((s, m) => s + (m.total_fine || 0), 0);
+  const overdueBorrowers = members.filter(m => (m.borrowed_books || []).some(bk => { const n = dLeft(bk.due_date); return n !== null && n < 0; }));
+  const depts = [...new Set(members.map(m => m.department).filter(Boolean))];
+  const highAttend = [...members].sort((a, b) => (b.no_of_days || 0) - (a.no_of_days || 0)).slice(0, 5);
+  const bookCatalogue = books.map(b => `• [${b.book_id}] "${b.title}" by ${b.author}${b.genre ? ` (${b.genre})` : ""} — ${b.available_pieces}/${b.total_pieces} available`).join("\n");
+  const memberRoster = members.map(m => `• ${m.name} [${m.roll_no}] | ${m.department} | ${(m.borrowed_books || []).length} books | Fine: ₹${m.total_fine || 0}` + ((m.borrowed_books || []).length > 0 ? ` | ${m.borrowed_books.map(bk => `"${bk.title || bk.book_id}" due ${fmt(bk.due_date)}`).join(", ")}` : "")).join("\n");
+  const overdueDetails = overdueBorrowers.flatMap(m => m.borrowed_books.filter(bk => { const n = dLeft(bk.due_date); return n !== null && n < 0; }).map(bk => `• ${m.name} [${m.roll_no}] — "${bk.title || bk.book_id}" ${Math.abs(dLeft(bk.due_date))}d overdue`)).join("\n");
 
   return `You are ARIA (Advanced Reading & Intelligence Assistant), the AI librarian for this NFC-based smart library. You are helpful, concise and warm. Only answer library-related questions.
 
 LIVE SNAPSHOT — ${now.toLocaleString("en-IN")}
 Books: ${books.length} titles · ${totalCopies} copies · ${availableCopies} available
-Members: ${members.length} · Borrowing: ${members.filter(m=>(m.borrowed_books||[]).length>0).length} · Fines: ₹${totalFineAmt} · Overdue: ${overdueBorrowers.length}
-Genres: ${genres.join(", ")||"None"} · Departments: ${depts.join(", ")||"None"}
-Top borrowed: ${mostBorrowed.map((b,i)=>`${i+1}."${b.title}"(${b.borrowed_by?.length||0}x)`).join(", ")}
-Top attendance: ${highAttend.map((m,i)=>`${i+1}.${m.name}(${m.no_of_days||0}d)`).join(", ")}
-Overdue:\n${overdueDetails||"None"}
-Books:\n${bookCatalogue||"None"}
-Members:\n${memberRoster||"None"}
+Members: ${members.length} · Borrowing: ${members.filter(m => (m.borrowed_books || []).length > 0).length} · Fines: ₹${totalFineAmt} · Overdue: ${overdueBorrowers.length}
+Genres: ${genres.join(", ") || "None"} · Departments: ${depts.join(", ") || "None"}
+Top borrowed: ${mostBorrowed.map((b, i) => `${i + 1}."${b.title}"(${b.borrowed_by?.length || 0}x)`).join(", ")}
+Top attendance: ${highAttend.map((m, i) => `${i + 1}.${m.name}(${m.no_of_days || 0}d)`).join(", ")}
+Overdue:\n${overdueDetails || "None"}
+Books:\n${bookCatalogue || "None"}
+Members:\n${memberRoster || "None"}
 
 Decline off-topic questions with: "I'm ARIA, your library assistant — I only answer library questions." Be concise and use bullet points.`;
 }
@@ -40,42 +38,42 @@ Decline off-topic questions with: "I'm ARIA, your library assistant — I only a
 function MD({ text }) {
   const lines = text.split("\n");
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:2}}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {lines.map((line, i) => {
         const fmt = (t) => t
-          .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g,"<em>$1</em>")
-          .replace(/`(.+?)`/g,`<code style="background:#f0f0f5;color:#1a1a2e;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace">$1</code>`);
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")
+          .replace(/`(.+?)`/g, `<code style="background:#f0f0f5;color:#1a1a2e;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace">$1</code>`);
 
         if (/^###? (.+)/.test(line)) return (
-          <div key={i} style={{fontSize:10,fontWeight:700,color:"#1a1a2e",textTransform:"uppercase",letterSpacing:"0.1em",margin:"8px 0 2px",paddingBottom:4,borderBottom:"1px solid #f0f0f0"}}>
-            {line.replace(/^###? /,"")}
+          <div key={i} style={{ fontSize: 10, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: "0.1em", margin: "8px 0 2px", paddingBottom: 4, borderBottom: "1px solid #f0f0f0" }}>
+            {line.replace(/^###? /, "")}
           </div>
         );
-        if (/^---+$/.test(line.trim())) return <div key={i} style={{height:1,background:"#f0f0f0",margin:"6px 0"}}/>;
+        if (/^---+$/.test(line.trim())) return <div key={i} style={{ height: 1, background: "#f0f0f0", margin: "6px 0" }} />;
         if (/^[•\-*] (.+)/.test(line)) return (
-          <div key={i} style={{display:"flex",gap:7,alignItems:"flex-start"}}>
-            <div style={{width:4,height:4,borderRadius:"50%",background:"#1a1a2e",flexShrink:0,marginTop:7}}/>
-            <span style={{fontSize:12.5,color:"#444",lineHeight:1.6}} dangerouslySetInnerHTML={{__html:fmt(line.replace(/^[•\-*] /,""))}}/>
+          <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#1a1a2e", flexShrink: 0, marginTop: 7 }} />
+            <span style={{ fontSize: 12.5, color: "#444", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: fmt(line.replace(/^[•\-*] /, "")) }} />
           </div>
         );
         if (/^\d+\. (.+)/.test(line)) return (
-          <div key={i} style={{fontSize:12.5,color:"#444",lineHeight:1.6}} dangerouslySetInnerHTML={{__html:fmt(line)}}/>
+          <div key={i} style={{ fontSize: 12.5, color: "#444", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: fmt(line) }} />
         );
-        if (line.trim()==="") return <div key={i} style={{height:4}}/>;
-        return <div key={i} style={{fontSize:12.5,color:"#333",lineHeight:1.65}} dangerouslySetInnerHTML={{__html:fmt(line)}}/>;
+        if (line.trim() === "") return <div key={i} style={{ height: 4 }} />;
+        return <div key={i} style={{ fontSize: 12.5, color: "#333", lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: fmt(line) }} />;
       })}
     </div>
   );
 }
 
 const QUICK = [
-  { icon:"📊", label:"Library status" },
-  { icon:"⚠️", label:"Overdue books" },
-  { icon:"💰", label:"Outstanding fines" },
-  { icon:"📚", label:"Popular books" },
-  { icon:"👥", label:"Active members" },
-  { icon:"📉", label:"Low stock" },
+  { icon: "📊", label: "Library status" },
+  { icon: "⚠️", label: "Overdue books" },
+  { icon: "💰", label: "Outstanding fines" },
+  { icon: "📚", label: "Popular books" },
+  { icon: "👥", label: "Active members" },
+  { icon: "📉", label: "Low stock" },
 ];
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
@@ -473,22 +471,22 @@ const css = `
 `;
 
 export default function ARIABubble() {
-  const [open,      setOpen]      = useState(false);
-  const [showTip,   setShowTip]   = useState(true);
-  const [unread,    setUnread]    = useState(false);
-  const [messages,  setMessages]  = useState([]);
-  const [input,     setInput]     = useState("");
-  const [sending,   setSending]   = useState(false);
+  const [open, setOpen] = useState(false);
+  const [showTip, setShowTip] = useState(true);
+  const [unread, setUnread] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
   const [dbLoading, setDbLoading] = useState(true);
-  const [syncing,   setSyncing]   = useState(false);
-  const [error,     setError]     = useState(null);
-  const [history,   setHistory]   = useState([]);
-  const [books,     setBooks]     = useState([]);
-  const [members,   setMembers]   = useState([]);
+  const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [members, setMembers] = useState([]);
 
   const chatRef = useRef(null);
-  const taRef   = useRef(null);
-  const sysRef  = useRef("");
+  const taRef = useRef(null);
+  const sysRef = useRef("");
 
   // hide tooltip after 4s
   useEffect(() => {
@@ -501,18 +499,18 @@ export default function ARIABubble() {
     setError(null);
     try {
       const [bRes, mRes] = await Promise.all([
-        axios.get("/book"),
-        axios.get("/account"),
+        api.get("/book"),
+        api.get("/account"),
       ]);
-      const b = bRes.data.books    || [];
+      const b = bRes.data.books || [];
       const m = mRes.data.accounts || mRes.data.members || [];
       setBooks(b); setMembers(m);
       sysRef.current = buildSystemPrompt(b, m);
       if (isSync) {
         setMessages(p => [...p, {
-          role:"ai",
-          content:`**Database synced ✓**\n${b.length} books · ${m.length} members — all up to date.`,
-          time:new Date()
+          role: "ai",
+          content: `**Database synced ✓**\n${b.length} books · ${m.length} members — all up to date.`,
+          time: new Date()
         }]);
       }
     } catch {
@@ -526,7 +524,7 @@ export default function ARIABubble() {
 
   useEffect(() => {
     if (chatRef.current)
-      chatRef.current.scrollTo({ top: chatRef.current.scrollHeight, behavior:"smooth" });
+      chatRef.current.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
 
   const resize = (el) => {
@@ -540,15 +538,15 @@ export default function ARIABubble() {
     if (!msg || sending) return;
     setInput(""); if (taRef.current) taRef.current.style.height = "auto";
     setError(null);
-    setMessages(p => [...p, { role:"user", content:msg, time:new Date() }]);
+    setMessages(p => [...p, { role: "user", content: msg, time: new Date() }]);
     setSending(true);
     try {
-      const res = await axios.post("/admin_ai/chat", {
+      const res = await api.post("/admin_ai/chat", {
         userMessage: msg, history, systemPrompt: sysRef.current,
       });
       const { reply, history: h2 } = res.data;
       setHistory(h2);
-      setMessages(p => [...p, { role:"ai", content:reply, time:new Date() }]);
+      setMessages(p => [...p, { role: "ai", content: reply, time: new Date() }]);
       if (!open) setUnread(true);
     } catch (e) {
       setError(e?.response?.data?.message || "AI request failed.");
@@ -557,13 +555,13 @@ export default function ARIABubble() {
     }
   };
 
-  const handleOpen = () => { setOpen(o=>!o); setUnread(false); setShowTip(false); };
+  const handleOpen = () => { setOpen(o => !o); setUnread(false); setShowTip(false); };
 
   // Stats
-  const totalFine    = members.reduce((s,m)=>s+(m.total_fine||0),0);
-  const overdue      = members.filter(m=>(m.borrowed_books||[]).some(bk=>{const n=dLeft(bk.due_date);return n!==null&&n<0;})).length;
-  const activeBorrow = members.filter(m=>(m.borrowed_books||[]).length>0).length;
-  const available    = books.reduce((s,b)=>s+(b.available_pieces||0),0);
+  const totalFine = members.reduce((s, m) => s + (m.total_fine || 0), 0);
+  const overdue = members.filter(m => (m.borrowed_books || []).some(bk => { const n = dLeft(bk.due_date); return n !== null && n < 0; })).length;
+  const activeBorrow = members.filter(m => (m.borrowed_books || []).length > 0).length;
+  const available = books.reduce((s, b) => s + (b.available_pieces || 0), 0);
 
   return (
     <>
@@ -575,12 +573,12 @@ export default function ARIABubble() {
       )}
 
       {/* FAB */}
-      <button className={`aria-fab ${open?"open":""}`} onClick={handleOpen}>
+      <button className={`aria-fab ${open ? "open" : ""}`} onClick={handleOpen}>
         <div className="aria-fab-inner">
           <div className="aria-fab-icon">{open ? "✕" : "📚"}</div>
           {!open && <div className="aria-fab-label">ARIA</div>}
         </div>
-        {unread && !open && <div className="aria-unread"/>}
+        {unread && !open && <div className="aria-unread" />}
       </button>
 
       {/* Dialog */}
@@ -593,7 +591,7 @@ export default function ARIABubble() {
             <div className="aria-head-text">
               <div className="aria-head-name">ARIA — Library AI</div>
               <div className="aria-online">
-                <span className="aria-online-dot"/>
+                <span className="aria-online-dot" />
                 Live database · Admin only
               </div>
             </div>
@@ -603,8 +601,8 @@ export default function ARIABubble() {
               onClick={() => loadDB(true)}
               disabled={syncing}
             >
-              <svg className={syncing?"aria-sync-spin":""} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+              <svg className={syncing ? "aria-sync-spin" : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
               </svg>
             </button>
             <button className="aria-head-btn" onClick={handleOpen}>✕</button>
@@ -614,13 +612,13 @@ export default function ARIABubble() {
           {!dbLoading && (
             <div className="aria-stats">
               {[
-                { v:books.length,    l:"Books",   c:"" },
-                { v:members.length,  l:"Members", c:"" },
-                { v:activeBorrow,    l:"Active",  c:activeBorrow>0?"warn":"" },
-                { v:overdue,         l:"Overdue", c:overdue>0?"danger":"ok" },
-                { v:`₹${totalFine}`, l:"Fines",   c:totalFine>0?"danger":"ok" },
-                { v:available,       l:"Avail.",  c:"ok" },
-              ].map(({v,l,c})=>(
+                { v: books.length, l: "Books", c: "" },
+                { v: members.length, l: "Members", c: "" },
+                { v: activeBorrow, l: "Active", c: activeBorrow > 0 ? "warn" : "" },
+                { v: overdue, l: "Overdue", c: overdue > 0 ? "danger" : "ok" },
+                { v: `₹${totalFine}`, l: "Fines", c: totalFine > 0 ? "danger" : "ok" },
+                { v: available, l: "Avail.", c: "ok" },
+              ].map(({ v, l, c }) => (
                 <div key={l} className="aria-stat-cell">
                   <div className={`aria-stat-val ${c}`}>{v}</div>
                   <div className="aria-stat-lbl">{l}</div>
@@ -636,7 +634,7 @@ export default function ARIABubble() {
           <div className="aria-msgs" ref={chatRef}>
             {dbLoading ? (
               <div className="aria-dbl">
-                <div className="aria-spin"/>
+                <div className="aria-spin" />
                 <span>Connecting to database…</span>
               </div>
             ) : messages.length === 0 ? (
@@ -647,23 +645,23 @@ export default function ARIABubble() {
                   Your AI library assistant with live data access. Ask me about books, members, fines, or recommendations.
                 </div>
                 <div className="aria-quick">
-                  {QUICK.map((q,i)=>(
-                    <button key={i} className="aria-qchip" onClick={()=>send(q.label)}>
+                  {QUICK.map((q, i) => (
+                    <button key={i} className="aria-qchip" onClick={() => send(q.label)}>
                       <span>{q.icon}</span>{q.label}
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              messages.map((msg,i) => (
-                <div key={i} className={`aria-row ${msg.role==="user"?"user":""}`}>
+              messages.map((msg, i) => (
+                <div key={i} className={`aria-row ${msg.role === "user" ? "user" : ""}`}>
                   <div className={`aria-av ${msg.role}`}>
-                    {msg.role==="ai" ? "📚" : "A"}
+                    {msg.role === "ai" ? "📚" : "A"}
                   </div>
-                  <div style={{maxWidth:"84%"}}>
+                  <div style={{ maxWidth: "84%" }}>
                     <div className={`aria-bbl ${msg.role}`}>
-                      {msg.role==="ai"
-                        ? <MD text={msg.content}/>
+                      {msg.role === "ai"
+                        ? <MD text={msg.content} />
                         : msg.content
                       }
                     </div>
@@ -676,7 +674,7 @@ export default function ARIABubble() {
               <div className="aria-typing-row">
                 <div className="aria-av ai">📚</div>
                 <div className="aria-typing-bbl">
-                  <div className="aria-tdot"/><div className="aria-tdot"/><div className="aria-tdot"/>
+                  <div className="aria-tdot" /><div className="aria-tdot" /><div className="aria-tdot" />
                 </div>
               </div>
             )}
@@ -694,7 +692,7 @@ export default function ARIABubble() {
                   rows={1}
                   disabled={sending || dbLoading}
                   onChange={e => { setInput(e.target.value); resize(e.target); }}
-                  onKeyDown={e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input);} }}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
                 />
               </div>
               <button
@@ -703,8 +701,8 @@ export default function ARIABubble() {
                 disabled={!input.trim() || sending || dbLoading}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
               </button>
             </div>

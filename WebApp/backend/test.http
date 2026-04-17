@@ -1,5 +1,7 @@
+@baseUrl = http://localhost:5000
+
 ### NFC Data Test - Student
-POST  http://localhost:5000/attendance
+POST {{baseUrl}}/attendance
 Content-Type: application/json
 
 {
@@ -7,16 +9,15 @@ Content-Type: application/json
 }
 
 ### NFC Data Test - Book (UPDATED)
-POST http://localhost:5000/nfc
+POST {{baseUrl}}/nfc
 Content-Type: application/json
 
 {
   "nfc_data": "Book Details book_id: \"BK001\" title: \"The Great Gatsby\" author: \"F. Scott Fitzgerald\" genre: \"Classic Fiction\""
 }
 
-
 ### NFC Data Test - Book
-POST http://localhost:5000/nfc
+POST {{baseUrl}}/nfc
 Content-Type: application/json
 
 {
@@ -24,7 +25,7 @@ Content-Type: application/json
 }
 
 ### NFC Data Test - Unrecognized Data
-POST http://localhost:5000/nfc
+POST {{baseUrl}}/nfc
 Content-Type: application/json
 
 {
@@ -32,7 +33,7 @@ Content-Type: application/json
 }
 
 ### SIGNIN
-POST http://localhost:5000/signin
+POST {{baseUrl}}/signin
 Content-Type: application/json
 
 {
@@ -41,7 +42,7 @@ Content-Type: application/json
 }
 
 ### Session selector 
-POST http://localhost:5000/library/select-action
+POST {{baseUrl}}/library/select-action
 Content-Type: application/json
 
 {
@@ -50,16 +51,15 @@ Content-Type: application/json
 }
 
 ### NFC Data Test - Book
-POST http://localhost:5000/library
+POST {{baseUrl}}/library
 Content-Type: application/json
 
 {
   "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063"
 }
 
-
 ### NFC Data Test - Book
-POST http://localhost:5000/library
+POST {{baseUrl}}/library
 Content-Type: application/json
 
 {
@@ -67,24 +67,23 @@ Content-Type: application/json
 }
 
 ### Close the active session
-POST http://localhost:5000/library/stop-session
+POST {{baseUrl}}/library/stop-session
 Content-Type: application/json
 
 ### GET Students
-GET http://localhost:5000/students
+GET {{baseUrl}}/students
 
 ### GET Books
-GET http://localhost:5000/books
+GET {{baseUrl}}/books
 
 ### GET INDIDUAL STUDENT DETAILS 
-
-GET http://localhost:5000/students/22AD063
+GET {{baseUrl}}/students/22AD063
 
 ### MANUAL FINR UPDATE 
-POST http://localhost:5000/students/update-fines
+POST {{baseUrl}}/students/update-fines
 
 ### Test Gemini AI API
-POST http://localhost:5000/gemini/
+POST {{baseUrl}}/gemini/
 Content-Type: application/json
 
 {
@@ -101,7 +100,3 @@ curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:g
     "parts":[{"text": "Explain how AI works"}]
     }]
    }'
-
-
-
-

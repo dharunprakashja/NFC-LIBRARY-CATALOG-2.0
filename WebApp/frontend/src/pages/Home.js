@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import MembersGrid from "../components/MembersGrid";
 import BooksGrid from "../components/BooksGrid";
-
-axios.defaults.baseURL = "http://localhost:5000";
+import { api } from "../api";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -99,7 +97,7 @@ const actions = [
     bg: "#f0fdf4", color: "#16a34a",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
       </svg>
     ),
   },
@@ -109,7 +107,7 @@ const actions = [
     bg: "#eff6ff", color: "#2563eb",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
       </svg>
     ),
   },
@@ -119,7 +117,7 @@ const actions = [
     bg: "#fdf4ff", color: "#9333ea",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.45"/>
+        <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.45" />
       </svg>
     ),
   },
@@ -127,8 +125,8 @@ const actions = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const [tab,      setTab]      = useState("members");
-  const [loading,  setLoading]  = useState(null); // tracks which card is loading
+  const [tab, setTab] = useState("members");
+  const [loading, setLoading] = useState(null); // tracks which card is loading
 
   const handleActionClick = async (a) => {
     // Attendance needs no API call — navigate directly
@@ -139,7 +137,7 @@ export default function Home() {
 
     setLoading(a.action);
     try {
-      await axios.post("/library/select-action", { action: a.action });
+      await api.post("/library/select-action", { action: a.action });
       navigate(a.path);
     } catch (err) {
       console.error("Failed to set action:", err);
@@ -166,7 +164,7 @@ export default function Home() {
               <div className="action-icon" style={{ background: a.bg, color: a.color }}>
                 {loading === a.action && a.action ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 0.8s linear infinite" }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
                 ) : a.icon}
               </div>
@@ -187,8 +185,8 @@ export default function Home() {
             onClick={() => setTab("members")}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
             Members
           </button>
@@ -197,7 +195,7 @@ export default function Home() {
             onClick={() => setTab("books")}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             Books
           </button>

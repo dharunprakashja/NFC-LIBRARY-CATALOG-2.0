@@ -1,24 +1,14 @@
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
-import axios from "axios";
 import BooksGrid from "./BooksGrid";
+import { api, SOCKET_URL, accountImageUrl, bookImageUrl } from "../api";
 
-axios.defaults.baseURL = "http://localhost:5000";
-const socket = io("http://localhost:5000");
+const socket = io(SOCKET_URL);
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
-const profileImgUrl = (img) => img ? `http://localhost:5000/image/account/${img}` : null;
+const profileImgUrl = (img) => accountImageUrl(img);
 const bookCoverUrl = (img) => {
-  if (!img) return null;
-
-  const value = String(img).trim();
-  if (!value) return null;
-
-  if (/^(https?:)?\/\//i.test(value) || value.startsWith("data:")) return value;
-  if (value.startsWith("/")) return `http://localhost:5000${value}`;
-  if (value.startsWith("image/")) return `http://localhost:5000/${value}`;
-
-  return `http://localhost:5000/image/book/${encodeURI(value)}`;
+  return bookImageUrl(img);
 };
 
 // ── Color palette ─────────────────────────────────────────────────────────────
@@ -340,7 +330,7 @@ export default function BorrowReturnDisplay() {
   const handleStopSession = async () => {
     setStopping(true);
     try {
-      const res = await axios.post("/library/stop-session");
+      const res = await api.post("/library/stop-session");
       showToast(res.data.message || "Session completed.");
       setAccountData(null); setBookData([]); setMessage(""); setAction(null);
     } catch (err) {
