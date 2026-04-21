@@ -8,6 +8,23 @@ Content-Type: application/json
   "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063"
 }
 
+### NFC Data Test - Book
+POST {{baseUrl}}/library
+Content-Type: application/json
+
+{
+  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063"
+}
+
+### NFC Data Test - Book
+POST {{baseUrl}}/library
+Content-Type: application/json
+
+{
+  "nfc_data": "Book Details book_id: \"BK001\" title: \"The Great Gatsby\" author: \"F. Scott Fitzgerald\" genre: \"Classic Fiction\""
+}
+
+
 ### NFC Data Test - Book (UPDATED)
 POST {{baseUrl}}/nfc
 Content-Type: application/json
@@ -50,21 +67,6 @@ Content-Type: application/json
   
 }
 
-### NFC Data Test - Book
-POST {{baseUrl}}/library
-Content-Type: application/json
-
-{
-  "nfc_data":  "Student Details Name: Dharun Prakash J A Department: Al & DS Roll-no: 22AD063"
-}
-
-### NFC Data Test - Book
-POST {{baseUrl}}/library
-Content-Type: application/json
-
-{
-  "nfc_data": "Book Details book_id: \"BK001\" title: \"The Great Gatsby\" author: \"F. Scott Fitzgerald\" genre: \"Classic Fiction\""
-}
 
 ### Close the active session
 POST {{baseUrl}}/library/stop-session
