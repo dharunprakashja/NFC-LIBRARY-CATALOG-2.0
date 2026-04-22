@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import MembersGrid from './MembersGrid';
-import { SOCKET_URL, accountImageUrl } from '../api';
+import { SOCKET_URL, accountImageUrl, api } from '../api';
 
 const socket = io(SOCKET_URL);
 
@@ -70,6 +70,66 @@ const styles = `
     letter-spacing: 0.1em; text-transform: uppercase;
     margin-bottom: 16px;
     display: flex; align-items: center; gap: 7px;
+  }
+  .at-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .at-header-row .at-card-title {
+    margin-bottom: 0;
+  }
+  .at-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .at-btn {
+    border: 1px solid #d7dbe7;
+    background: #f8f9fc;
+    color: #1a1a2e;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .at-btn:hover:not(:disabled) {
+    background: #eef1f8;
+    transform: translateY(-1px);
+  }
+  .at-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .at-btn.stop {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #be123c;
+  }
+  .at-btn.stop:hover:not(:disabled) {
+    background: #ffe4e6;
+  }
+  .at-nfc-note {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid;
+  }
+  .at-nfc-note.info {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+  .at-nfc-note.error {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
   }
   .at-card-title svg { width: 14px; height: 14px; color: #1a1a2e; }
 
@@ -310,13 +370,136 @@ function AttendanceDots({ dates = [] }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AttendanceDisplay() {
   const [nfcData, setNfcData] = useState(null);
+  const [scanMessage, setScanMessage] = useState('');
+  const [scanError, setScanError] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [nfcSupported, setNfcSupported] = useState(false);
+  const abortRef = useRef(null);
+  const mountedRef = useRef(true);
   const now = useClock();
 
+  const isValidAttendanceTag = (text) => {
+    if (!text || typeof text !== 'string') return false;
+    const pattern = /(?:Account|Student) Details\s+Name:\s*(.+?)\s+Department:\s*(.+?)\s+Roll-no:\s*(\w+)(?:\s+Mobile:\s*(\d+))?/i;
+    return pattern.test(text.trim());
+  };
+
+  const readNfcText = (message) => {
+    if (!message?.records?.length) return '';
+
+    for (const record of message.records) {
+      if (record.recordType === 'text' && record.data) {
+        const decoder = new TextDecoder(record.encoding || 'utf-8');
+        const value = decoder.decode(record.data).trim();
+        if (value) return value;
+      }
+      if (record.recordType === 'url' && record.data) {
+        const decoder = new TextDecoder('utf-8');
+        const value = decoder.decode(record.data).trim();
+        if (value) return value;
+      }
+    }
+
+    return '';
+  };
+
+  const submitAttendanceFromTag = async (tagText) => {
+    if (!isValidAttendanceTag(tagText)) {
+      setScanError('Invalid NFC attendance tag. Expected Student/Account Details format.');
+      return;
+    }
+
+    setIsSending(true);
+    setScanError('');
+    setScanMessage('Sending attendance to server...');
+
+    try {
+      const { data } = await api.post('/attendance', { nfc_data: tagText.trim() });
+
+      if (data?.account || data?.student) {
+        setNfcData({
+          account: data.account || data.student,
+          message: data.message || 'Attendance processed successfully.',
+        });
+      }
+
+      setScanMessage(data?.message || 'Attendance sent successfully.');
+    } catch (error) {
+      const serverMessage = error?.response?.data?.message;
+      setScanError(serverMessage || 'Failed to send attendance. Check your network and try again.');
+    } finally {
+      if (mountedRef.current) setIsSending(false);
+    }
+  };
+
+  const stopNfcScan = () => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setIsScanning(false);
+  };
+
+  const startNfcScan = async () => {
+    setScanError('');
+    setScanMessage('');
+
+    if (!nfcSupported) {
+      setScanError('Web NFC is not supported on this device/browser.');
+      return;
+    }
+
+    try {
+      const ndef = new window.NDEFReader();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      await ndef.scan({ signal: controller.signal });
+      setIsScanning(true);
+      setScanMessage('Scanner is active. Tap an attendance NFC tag.');
+
+      ndef.onreadingerror = () => {
+        setScanError('NFC tag was detected but could not be read. Try scanning again.');
+      };
+
+      ndef.onreading = async ({ message }) => {
+        if (isSending) return;
+
+        const text = readNfcText(message);
+        if (!text) {
+          setScanError('No readable text found in NFC tag.');
+          return;
+        }
+
+        await submitAttendanceFromTag(text);
+      };
+    } catch (error) {
+      setIsScanning(false);
+      if (error?.name === 'NotAllowedError') {
+        setScanError('NFC permission denied. Allow NFC permission and try again.');
+      } else if (error?.name !== 'AbortError') {
+        setScanError(error?.message || 'Unable to start NFC scanner.');
+      }
+    }
+  };
+
   useEffect(() => {
+    mountedRef.current = true;
+    setNfcSupported(typeof window !== 'undefined' && 'NDEFReader' in window);
+
     socket.on('nfcDataReceived', (data) => {
       if (data.account || data.student) setNfcData(data);
     });
-    return () => { socket.off('nfcDataReceived'); };
+
+    return () => {
+      mountedRef.current = false;
+      socket.off('nfcDataReceived');
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+    };
   }, []);
 
   const account = nfcData?.account || nfcData?.student || null;
@@ -334,7 +517,41 @@ export default function AttendanceDisplay() {
       <div className="at-root">
 
         <div className="at-card">
-          <div className="at-card-title"><NfcIcon /> NFC Attendance Scanner</div>
+          <div className="at-header-row">
+            <div className="at-card-title"><NfcIcon /> NFC Attendance Scanner</div>
+            <div className="at-actions">
+              {!isScanning ? (
+                <button
+                  type="button"
+                  className="at-btn"
+                  onClick={startNfcScan}
+                  disabled={!nfcSupported || isSending}
+                  title={nfcSupported ? 'Start scanning attendance NFC tags' : 'Web NFC not available'}
+                >
+                  Scan with Device NFC
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="at-btn stop"
+                  onClick={stopNfcScan}
+                  disabled={isSending}
+                >
+                  Stop Scan
+                </button>
+              )}
+            </div>
+          </div>
+
+          {!nfcSupported && (
+            <div className="at-nfc-note error">This device/browser does not support Web NFC.</div>
+          )}
+          {scanMessage && !scanError && (
+            <div className="at-nfc-note info">{scanMessage}</div>
+          )}
+          {scanError && (
+            <div className="at-nfc-note error">{scanError}</div>
+          )}
 
           {!account ? (
             <div className="at-idle">
