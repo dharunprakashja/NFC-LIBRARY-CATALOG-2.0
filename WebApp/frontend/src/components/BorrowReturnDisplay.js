@@ -413,7 +413,6 @@ export default function BorrowReturnDisplay() {
     setScanMessage("");
 
     if (!supportsWebNfc()) {
-      setScanError("This device/browser does not support Web NFC.");
       return;
     }
 
@@ -531,9 +530,6 @@ export default function BorrowReturnDisplay() {
 
           {isScanning && !scanError && (
             <div className="br-status-note info">Device scanner is active. Scan a member card, then book tags.</div>
-          )}
-          {!supportsWebNfc() && (
-            <div className="br-status-note error">This device/browser does not support Web NFC.</div>
           )}
           {scanMessage && !scanError && (
             <div className="br-status-note info">{scanMessage}</div>

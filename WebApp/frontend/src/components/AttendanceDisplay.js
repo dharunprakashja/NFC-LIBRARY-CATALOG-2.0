@@ -405,7 +405,6 @@ export default function AttendanceDisplay() {
     setScanMessage('');
 
     if (!supportsWebNfc()) {
-      setScanError('Web NFC is not supported on this device/browser.');
       return;
     }
 
@@ -481,9 +480,6 @@ export default function AttendanceDisplay() {
 
           {isScanning && !scanError && (
             <div className="at-nfc-note info">Device scanner is active. Tap an attendance NFC tag.</div>
-          )}
-          {!supportsWebNfc() && (
-            <div className="at-nfc-note error">This device/browser does not support Web NFC.</div>
           )}
           {scanMessage && !scanError && (
             <div className="at-nfc-note info">{scanMessage}</div>
