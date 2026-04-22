@@ -71,48 +71,6 @@ const styles = `
     margin-bottom: 16px;
     display: flex; align-items: center; gap: 7px;
   }
-  .at-header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .at-header-row .at-card-title {
-    margin-bottom: 0;
-  }
-  .at-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .at-btn {
-    border: 1px solid #d7dbe7;
-    background: #f8f9fc;
-    color: #1a1a2e;
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: 999px;
-    padding: 7px 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .at-btn:hover:not(:disabled) {
-    background: #eef1f8;
-    transform: translateY(-1px);
-  }
-  .at-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-  .at-btn.stop {
-    background: #fff1f2;
-    border-color: #fecdd3;
-    color: #be123c;
-  }
-  .at-btn.stop:hover:not(:disabled) {
-    background: #ffe4e6;
-  }
   .at-nfc-note {
     font-size: 11px;
     font-weight: 600;
@@ -374,10 +332,11 @@ export default function AttendanceDisplay() {
   const [scanError, setScanError] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [nfcSupported, setNfcSupported] = useState(false);
   const abortRef = useRef(null);
   const mountedRef = useRef(true);
   const now = useClock();
+
+  const supportsWebNfc = () => typeof window !== 'undefined' && 'NDEFReader' in window;
 
   const isValidAttendanceTag = (text) => {
     if (!text || typeof text !== 'string') return false;
@@ -445,7 +404,7 @@ export default function AttendanceDisplay() {
     setScanError('');
     setScanMessage('');
 
-    if (!nfcSupported) {
+    if (!supportsWebNfc()) {
       setScanError('Web NFC is not supported on this device/browser.');
       return;
     }
@@ -486,11 +445,12 @@ export default function AttendanceDisplay() {
 
   useEffect(() => {
     mountedRef.current = true;
-    setNfcSupported(typeof window !== 'undefined' && 'NDEFReader' in window);
 
     socket.on('nfcDataReceived', (data) => {
       if (data.account || data.student) setNfcData(data);
     });
+
+
 
     return () => {
       mountedRef.current = false;
@@ -517,33 +477,12 @@ export default function AttendanceDisplay() {
       <div className="at-root">
 
         <div className="at-card">
-          <div className="at-header-row">
-            <div className="at-card-title"><NfcIcon /> NFC Attendance Scanner</div>
-            <div className="at-actions">
-              {!isScanning ? (
-                <button
-                  type="button"
-                  className="at-btn"
-                  onClick={startNfcScan}
-                  disabled={!nfcSupported || isSending}
-                  title={nfcSupported ? 'Start scanning attendance NFC tags' : 'Web NFC not available'}
-                >
-                  Scan with Device NFC
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="at-btn stop"
-                  onClick={stopNfcScan}
-                  disabled={isSending}
-                >
-                  Stop Scan
-                </button>
-              )}
-            </div>
-          </div>
+          <div className="at-card-title"><NfcIcon /> NFC Attendance Scanner</div>
 
-          {!nfcSupported && (
+          {isScanning && !scanError && (
+            <div className="at-nfc-note info">Device scanner is active. Tap an attendance NFC tag.</div>
+          )}
+          {!supportsWebNfc() && (
             <div className="at-nfc-note error">This device/browser does not support Web NFC.</div>
           )}
           {scanMessage && !scanError && (
@@ -556,7 +495,7 @@ export default function AttendanceDisplay() {
           {!account ? (
             <div className="at-idle">
               <div className="at-idle-ring"><NfcIcon /></div>
-              <span className="at-idle-text">Waiting for NFC scan…</span>
+              <span className="at-idle-text">Device scanner is active…</span>
               <div className="at-pulse-bar"><div className="at-pulse-bar-inner" /></div>
             </div>
           ) : (

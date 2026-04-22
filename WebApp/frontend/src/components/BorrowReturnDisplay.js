@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
+import { useLocation } from "react-router-dom";
 import BooksGrid from "./BooksGrid";
 import { api, SOCKET_URL, accountImageUrl, bookImageUrl } from "../api";
 
@@ -68,6 +69,25 @@ const styles = `
   @keyframes brBadgePop { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
   .br-action-badge.borrow { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
   .br-action-badge.return { background: #fdf4ff; color: #9333ea; border: 1px solid #e9d5ff; }
+
+  .br-status-note {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid;
+  }
+  .br-status-note.info {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+  .br-status-note.error {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
 
   /* ── Idle ── */
   .br-idle { display:flex; flex-direction:column; align-items:center; padding:32px 0 20px; gap:12px; }
@@ -299,6 +319,136 @@ export default function BorrowReturnDisplay() {
   const [action, setAction] = useState(null);
   const [stopping, setStopping] = useState(false);
   const [toast, setToast] = useState("");
+  const [scanMessage, setScanMessage] = useState("");
+  const [scanError, setScanError] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const abortRef = useRef(null);
+  const mountedRef = useRef(true);
+  const location = useLocation();
+
+  const sessionAction = location.pathname.includes("return") ? "return" : "borrow";
+  const supportsWebNfc = () => typeof window !== "undefined" && "NDEFReader" in window;
+
+  const isValidMemberTag = (text) => {
+    if (!text || typeof text !== "string") return false;
+    const pattern = /(?:Account|Student) Details\s+Name:\s*(.+?)\s+Department:\s*(.+?)\s+Roll-no:\s*(\w+)(?:\s+Mobile:\s*(\d+))?/i;
+    return pattern.test(text.trim());
+  };
+
+  const isValidBookTag = (text) => {
+    if (!text || typeof text !== "string") return false;
+    const pattern = /Book Details\s+book_id:\s*"?.+?"?\s+title:\s*"?.+?"?\s+author:\s*"?.+?"?(?:\s+genre:\s*"?.+?"?)?\s*$/i;
+    return pattern.test(text.trim());
+  };
+
+  const readNfcText = (messageData) => {
+    if (!messageData?.records?.length) return "";
+
+    for (const record of messageData.records) {
+      if (record.recordType === "text" && record.data) {
+        const decoder = new TextDecoder(record.encoding || "utf-8");
+        const value = decoder.decode(record.data).trim();
+        if (value) return value;
+      }
+      if (record.recordType === "url" && record.data) {
+        const decoder = new TextDecoder("utf-8");
+        const value = decoder.decode(record.data).trim();
+        if (value) return value;
+      }
+    }
+
+    return "";
+  };
+
+  const stopNfcScan = () => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setIsScanning(false);
+  };
+
+  const sendNfcTag = async (tagText) => {
+    const validMember = isValidMemberTag(tagText);
+    const validBook = isValidBookTag(tagText);
+
+    if (!validMember && !validBook) {
+      setScanError("Invalid NFC tag. Expected Account/Student Details or Book Details format.");
+      return;
+    }
+
+    setIsSending(true);
+    setScanError("");
+    setScanMessage("Sending scanned NFC data...");
+
+    try {
+      const { data } = await api.post("/library", { nfc_data: tagText.trim() });
+
+      if (data?.account || data?.student) {
+        setAccountData(data.account || data.student);
+        setAction(data.action || sessionAction);
+        setBookData([]);
+      }
+
+      if (data?.book) {
+        const { book_id, title, author, genre, cover_image, available_pieces, total_pieces } = data.book;
+        setBookData((prev) => {
+          const exists = prev.some((book) => book.book_id === book_id);
+          return exists ? prev : [...prev, { book_id, title, author, genre, cover_image, available_pieces, total_pieces }];
+        });
+      }
+
+      setMessage(data?.message || "NFC data sent successfully.");
+      setScanMessage(data?.message || "NFC data sent successfully.");
+    } catch (error) {
+      setScanError(error?.response?.data?.message || "Failed to send scanned NFC data.");
+    } finally {
+      if (mountedRef.current) setIsSending(false);
+    }
+  };
+
+  const startNfcScan = async () => {
+    setScanError("");
+    setScanMessage("");
+
+    if (!supportsWebNfc()) {
+      setScanError("This device/browser does not support Web NFC.");
+      return;
+    }
+
+    try {
+      const ndef = new window.NDEFReader();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      await ndef.scan({ signal: controller.signal });
+      setIsScanning(true);
+      setScanMessage(`Device scanner is active. Scan ${sessionAction === "borrow" ? "member cards and books" : "member cards and books"}.`);
+
+      ndef.onreadingerror = () => {
+        setScanError("NFC tag was detected but could not be read. Try scanning again.");
+      };
+
+      ndef.onreading = async ({ message: nfcMessage }) => {
+        if (isSending) return;
+        const text = readNfcText(nfcMessage);
+        if (!text) {
+          setScanError("No readable text found in NFC tag.");
+          return;
+        }
+
+        await sendNfcTag(text);
+      };
+    } catch (error) {
+      setIsScanning(false);
+      if (error?.name === "NotAllowedError") {
+        setScanError("NFC permission denied. Allow NFC permission and try again.");
+      } else if (error?.name !== "AbortError") {
+        setScanError(error?.message || "Unable to start NFC scanner.");
+      }
+    }
+  };
 
   const showToast = (msg) => {
     setToast(msg);
@@ -306,6 +456,7 @@ export default function BorrowReturnDisplay() {
   };
 
   useEffect(() => {
+    mountedRef.current = true;
     socket.on("nfcDataReceived", (data) => {
       if (data.account || data.student) {
         setAccountData(data.account || data.student);
@@ -324,7 +475,27 @@ export default function BorrowReturnDisplay() {
       }
       setMessage(data.message || "");
     });
-    return () => socket.off("nfcDataReceived");
+
+    const initialize = async () => {
+      try {
+        await api.post("/library/select-action", { action: sessionAction });
+        setAction(sessionAction);
+      } catch (error) {
+        setScanError(error?.response?.data?.message || "Failed to set library action.");
+      }
+
+      if (supportsWebNfc()) {
+        await startNfcScan();
+      }
+    };
+
+    initialize();
+
+    return () => {
+      mountedRef.current = false;
+      socket.off("nfcDataReceived");
+      stopNfcScan();
+    };
   }, []);
 
   const handleStopSession = async () => {
@@ -358,10 +529,23 @@ export default function BorrowReturnDisplay() {
             )}
           </div>
 
+          {isScanning && !scanError && (
+            <div className="br-status-note info">Device scanner is active. Scan a member card, then book tags.</div>
+          )}
+          {!supportsWebNfc() && (
+            <div className="br-status-note error">This device/browser does not support Web NFC.</div>
+          )}
+          {scanMessage && !scanError && (
+            <div className="br-status-note info">{scanMessage}</div>
+          )}
+          {scanError && (
+            <div className="br-status-note error">{scanError}</div>
+          )}
+
           {!accountData ? (
             <div className="br-idle">
               <div className="br-idle-icon"><LibraryIcon /></div>
-              <span className="br-idle-text">Scan a member card to start…</span>
+              <span className="br-idle-text">Device scanner is active…</span>
               <div className="br-pulse-bar"><div className="br-pulse-bar-inner" /></div>
             </div>
           ) : (
