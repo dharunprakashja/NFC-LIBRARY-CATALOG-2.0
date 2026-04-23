@@ -13,7 +13,6 @@ router.post('/chat', async (req, res) => {
     }
 
     const apiKey = process.env.GEMINI_API_KEY_ADMIN;
-    console.log("GEMINI KEY ADMIN : ", apiKey);
     if (!apiKey) {
         return res.status(500).json({ message: 'GEMINI_API_KEY is not set in .env' });
     }

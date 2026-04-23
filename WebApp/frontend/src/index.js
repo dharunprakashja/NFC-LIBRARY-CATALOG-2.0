@@ -12,7 +12,7 @@ import Home from './pages/Home';
 import AttendanceDisplay from './components/AttendanceDisplay';
 import ManageBooks from './pages/ManageBooks';
 import ManageUsers from './pages/ManageUsers';
-// import Fines           from './pages/Fines';
+import Fines from './pages/Fines';
 // import Reports         from './pages/Reports';
 
 // User pages
@@ -51,7 +51,7 @@ root.render(
           <Route path="/return-book" element={<WithNav><BorrowReturnDisplay /></WithNav>} />
           <Route path="/manage-books" element={<WithNav><ManageBooks /></WithNav>} />
           <Route path="/manage-users" element={<WithNav><ManageUsers /></WithNav>} />
-          {/* <Route path="/fines"        element={<WithNav><Fines /></WithNav>} />     */}
+          <Route path="/fines" element={<WithNav><Fines /></WithNav>} />
           {/* <Route path="/reports"      element={<WithNav><Reports /></WithNav>} />   */}
           <Route path="*" element={<WithNav><Home /></WithNav>} />
         </>

@@ -66,15 +66,8 @@
 
 const Student = require('../models/account');
 const calculateFine = require('../services/fineCalculator');
-const twilio = require('twilio');
+const sendSMS = require('../services/smsService');
 require('dotenv').config();
-
-
-// // Twilio credentials
-// const accountSid = process.env.TWILIO_ACCOUNT_SID;
-// const authToken = process.env.TWILIO_AUTH_TOKEN;
-// const fromPhoneNumber = process.env.TWILIO_FROM_PHONE;
-// const client = twilio(accountSid, authToken);
 
 async function sendNotifications() {
   try {
@@ -125,11 +118,7 @@ async function sendNotifications() {
 
         // Send SMS using Twilio
         try {
-          await client.messages.create({
-            body: message,
-            from: fromPhoneNumber,
-            to: student.mobile
-          });
+          await sendSMS(student.mobile, message);
           console.log(`SMS sent to ${student.name} (${student.mobile}).`);
         } catch (twilioError) {
           console.error(`Failed to send SMS to ${student.name} (${student.mobile}):`, twilioError);

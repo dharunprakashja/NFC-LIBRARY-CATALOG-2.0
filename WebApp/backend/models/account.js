@@ -24,6 +24,18 @@ const accountSchema = new mongoose.Schema({
   ],
 
   total_fine: { type: Number, default: 0 },
+
+  notification_settings: {
+    preferred_channel: {
+      type: String,
+      enum: ['sms', 'whatsapp', 'voice'],
+      default: 'sms',
+    },
+    automated_enabled: {
+      type: Boolean,
+      default: true,
+    },
+  },
 });
 
 // Instance method to calculate and update fines

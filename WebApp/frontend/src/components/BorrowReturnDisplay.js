@@ -35,7 +35,7 @@ function getMaskedMobile(mobile) {
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  .br-root { font-family: 'Inter', sans-serif; }
+  .br-root { font-family: 'Inter', sans-serif; width: 100%; }
 
   /* ── Outer card ── */
   .br-card {
@@ -93,7 +93,7 @@ const styles = `
   .br-idle { display:flex; flex-direction:column; align-items:center; padding:32px 0 20px; gap:12px; }
   .br-idle-icon { width:62px; height:62px; background:#f5f5f7; border-radius:50%; display:flex; align-items:center; justify-content:center; }
   .br-idle-icon svg { width:28px; height:28px; color:#ccc; }
-  .br-idle-text { font-size:13px; color:#bbb; }
+  .br-idle-text { font-size:13px; color:#bbb; text-align: center; }
   .br-pulse-bar { width:100%; height:2px; background:#f0f0f0; border-radius:100px; overflow:hidden; margin-top:12px; }
   .br-pulse-bar-inner { height:100%; width:35%; background:linear-gradient(90deg,#1a1a2e,#4a4a8a); border-radius:100px; animation:brPulse 1.6s ease-in-out infinite; }
   @keyframes brPulse { 0%{transform:translateX(-100%)} 100%{transform:translateX(380%)} }
@@ -129,7 +129,7 @@ const styles = `
   }
   .br-passport img { width:100%; height:100%; object-fit:cover; object-position:center top; display:block; }
 
-  .br-identity { display:flex; flex-direction:column; padding-top:3px; }
+  .br-identity { display:flex; flex-direction:column; padding-top:3px; word-break: break-word; }
   .br-name { font-size:17px; font-weight:700; color:#111; line-height:1.2; margin-bottom:4px; }
   .br-dept { font-size:12px; color:#888; margin-bottom:2px; }
   .br-roll { font-size:11px; color:#bbb; font-weight:500; margin-bottom:14px; }
@@ -248,6 +248,43 @@ const styles = `
   }
 
   .br-section-title { font-size:16px; font-weight:600; color:#111; margin-bottom:16px; }
+
+  /* ── RESPONSIVE STYLES ── */
+  @media (max-width: 768px) {
+    .br-card {
+      padding: 16px;
+    }
+    .br-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .br-result {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .br-vdivider {
+      width: 100%;
+      height: 1px;
+      margin: 4px 0;
+    }
+    .br-left {
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .br-left {
+      flex-direction: column;
+      text-align: center;
+    }
+    .br-stat-chip {
+      margin: 0 auto 10px;
+    }
+    .br-book-genre {
+      display: none; /* Hide genre pill on very small screens to save space */
+    }
+  }
 `;
 
 // ── Icons ──────────────────────────────────────────────────────────────────────

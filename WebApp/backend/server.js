@@ -12,6 +12,7 @@ const signInRoutes = require('./routes/signin');
 const libraryRoutes = require('./routes/library');
 const bookRoutes = require('./routes/book_crud'); // Import Book routes
 const studentRoutes = require('./routes/account_crud'); // Import Student routes
+const { router: fineRoutes, sendAutomatedFineNotifications } = require('./routes/fines');
 const updateAllStudentsFines = require('./cron/fineUpdater'); // Import fine updater
 const morgan = require('morgan'); // Logging middleware
 const cron = require('node-cron'); // Cron job scheduling
@@ -33,7 +34,7 @@ app.use(express.json());
 app.use(morgan('dev')); // Logs HTTP requests
 // Add this line to include the route
 app.use('/students', studentRoutes);
-app.use('/image',express.static(path.join(__dirname, 'image'))
+app.use('/image', express.static(path.join(__dirname, 'image'))
 );// MongoDB Connection
 connectDB(); // Connect to the MongoDB database
 
@@ -49,6 +50,7 @@ app.use('/account', signInRoutes);
 app.use('/library', libraryRoutes);
 app.use('/book', bookRoutes); // Add Book routes
 app.use('/students', studentRoutes); // Add Student routes
+app.use('/fines', fineRoutes);
 app.use('/admin_ai', admingeminiRoute);
 app.use('/user_ai', usergeminiRoute);
 
@@ -96,6 +98,16 @@ cron.schedule('0 0 * * *', () => {
 cron.schedule('0 0 * * *', () => {
   console.log(' Updating student fines...');
   updateAllStudentsFines();
+});
+
+// Send automated fine reminders according to each member preferred channel.
+cron.schedule('30 9 * * *', async () => {
+  try {
+    const results = await sendAutomatedFineNotifications();
+    console.log(` Automated fine notifications processed: ${results.length}`);
+  } catch (error) {
+    console.error(' Automated fine notifications failed:', error.message);
+  }
 });
 
 // Start the server

@@ -48,7 +48,7 @@ function useClock() {
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  .at-root { font-family: 'Inter', sans-serif; }
+  .at-root { font-family: 'Inter', sans-serif; width: 100%; }
 
   /* ── Outer card ── */
   .at-card {
@@ -101,7 +101,7 @@ const styles = `
     background: #f5f5f7; display: flex; align-items: center; justify-content: center;
   }
   .at-idle-ring svg { width: 28px; height: 28px; color: #ccc; }
-  .at-idle-text { font-size: 13px; color: #bbb; }
+  .at-idle-text { font-size: 13px; color: #bbb; text-align: center; }
   .at-pulse-bar { width:100%; height:2px; background:#f0f0f0; border-radius:100px; overflow:hidden; margin-top:12px; }
   .at-pulse-bar-inner {
     height:100%; width:35%;
@@ -142,7 +142,7 @@ const styles = `
   }
   .at-passport img { width:100%; height:100%; object-fit:cover; object-position:center top; display:block; }
 
-  .at-identity { display:flex; flex-direction:column; padding-top:3px; }
+  .at-identity { display:flex; flex-direction:column; padding-top:3px; word-break: break-word; }
   .at-name { font-size:17px; font-weight:700; color:#111; line-height:1.2; margin-bottom:4px; }
   .at-dept { font-size:12px; color:#888; margin-bottom:2px; }
   .at-roll { font-size:11px; color:#bbb; font-weight:500; margin-bottom:12px; }
@@ -174,7 +174,7 @@ const styles = `
 
   /* Clock + date pill in top-right */
   .at-clock-row {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .at-clock {
     font-size: 26px; font-weight: 700; color: #111;
@@ -185,6 +185,7 @@ const styles = `
     font-size: 11px; font-weight: 600; color: #555;
     background: #f4f4f7; border: 1px solid #eaeaee;
     padding: 6px 12px; border-radius: 100px;
+    white-space: nowrap;
   }
 
   /* 3 stat tiles */
@@ -255,6 +256,42 @@ const styles = `
 
   /* ── Section title ── */
   .at-section-title { font-size:16px; font-weight:600; color:#111; margin-bottom:16px; }
+
+  /* ── RESPONSIVE STYLES ── */
+  @media (max-width: 768px) {
+    .at-card {
+      padding: 16px;
+    }
+    .at-result {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .at-vdivider {
+      width: 100%;
+      height: 1px;
+      margin: 4px 0;
+    }
+    .at-left {
+      align-items: center;
+    }
+    .at-clock-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .at-date-pill {
+      align-self: flex-start;
+    }
+    .at-stat-row {
+      gap: 6px;
+    }
+    .at-tile-val {
+      font-size: 18px;
+    }
+    .at-attend-dots {
+      gap: 4px;
+    }
+  }
 `;
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
@@ -455,13 +492,9 @@ export default function AttendanceDisplay() {
       if (data.account || data.student) setNfcData(data);
     });
 
-
     if (supportsWebNfc()) {
       startNfcScan();
-    } else {
-      setScanError('Web NFC is not supported in this browser.');
     }
-
 
     return () => {
       mountedRef.current = false;
