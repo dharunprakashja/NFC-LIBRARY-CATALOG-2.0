@@ -512,6 +512,7 @@ export default function BorrowReturnDisplay() {
 
   // accent color for left border of book rows
   const accentColor = action === "return" ? "#9333ea" : "#2563eb";
+  const scannerNote = scanMessage || "Device scanner is active. Scan a member card, then book tags.";
 
   return (
     <>
@@ -528,11 +529,8 @@ export default function BorrowReturnDisplay() {
             )}
           </div>
 
-          {isScanning && !scanError && (
-            <div className="br-status-note info">Device scanner is active. Scan a member card, then book tags.</div>
-          )}
-          {scanMessage && !scanError && (
-            <div className="br-status-note info">{scanMessage}</div>
+          {(isScanning || scanMessage) && !scanError && (
+            <div className="br-status-note info">{scannerNote}</div>
           )}
           {scanError && (
             <div className="br-status-note error">{scanError}</div>

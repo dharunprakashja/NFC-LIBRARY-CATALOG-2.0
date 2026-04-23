@@ -206,6 +206,12 @@ const styles = `
   .at-tile-val { font-size:20px; font-weight:700; color:#111; line-height:1; }
   .at-tile-key { font-size:9px; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
 
+  .at-attendance-block {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
   /* Borrowed books mini list */
   .at-books-label {
     font-size:10px; font-weight:600; color:#bbb;
@@ -558,6 +564,15 @@ export default function AttendanceDisplay() {
                     </div>
                   </div>
                 )}
+
+                <div className="at-attendance-block">
+                  <div className="at-attend-label">Recent Attendance</div>
+                  {attendance.length > 0 ? (
+                    <AttendanceDots dates={attendance} />
+                  ) : (
+                    <div className="at-no-data">No attendance records yet.</div>
+                  )}
+                </div>
 
 
               </div>
