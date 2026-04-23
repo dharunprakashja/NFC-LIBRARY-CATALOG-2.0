@@ -456,6 +456,12 @@ export default function AttendanceDisplay() {
     });
 
 
+    if (supportsWebNfc()) {
+      startNfcScan();
+    } else {
+      setScanError('Web NFC is not supported in this browser.');
+    }
+
 
     return () => {
       mountedRef.current = false;
