@@ -90,6 +90,26 @@ const styles = `
     border-color: #fecaca;
   }
   .at-card-title svg { width: 14px; height: 14px; color: #1a1a2e; }
+  .at-device-pill {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .at-device-pill.connected {
+    background: #ecfdf3;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+  .at-device-pill.disconnected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
 
   /* ── Idle ── */
   .at-idle {
@@ -375,6 +395,10 @@ export default function AttendanceDisplay() {
   const [scanError, setScanError] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [attendanceDevice, setAttendanceDevice] = useState({
+    connected: false,
+    port: 'COM11',
+  });
   const abortRef = useRef(null);
   const mountedRef = useRef(true);
   const now = useClock();
@@ -492,6 +516,22 @@ export default function AttendanceDisplay() {
       if (data.account || data.student) setNfcData(data);
     });
 
+    socket.on('deviceStatus', (status) => {
+      if (status?.attendance) {
+        setAttendanceDevice(status.attendance);
+      }
+    });
+
+    api.get('/device-status')
+      .then((res) => {
+        if (res?.data?.attendance) {
+          setAttendanceDevice(res.data.attendance);
+        }
+      })
+      .catch(() => {
+        // Live socket updates will still refresh status.
+      });
+
     if (supportsWebNfc()) {
       startNfcScan();
     }
@@ -499,6 +539,7 @@ export default function AttendanceDisplay() {
     return () => {
       mountedRef.current = false;
       socket.off('nfcDataReceived');
+      socket.off('deviceStatus');
       if (abortRef.current) {
         abortRef.current.abort();
         abortRef.current = null;
@@ -521,7 +562,12 @@ export default function AttendanceDisplay() {
       <div className="at-root">
 
         <div className="at-card">
-          <div className="at-card-title"><NfcIcon /> NFC Attendance Scanner</div>
+          <div className="at-card-title">
+            <NfcIcon /> NFC Attendance Scanner
+            <span className={`at-device-pill ${attendanceDevice.connected ? 'connected' : 'disconnected'}`}>
+              Attendance Device {attendanceDevice.connected ? 'Connected' : 'Disconnected'} ({attendanceDevice.port || 'N/A'})
+            </span>
+          </div>
 
           {isScanning && !scanError && (
             <div className="at-nfc-note info">Device scanner is active. Tap an attendance NFC tag.</div>

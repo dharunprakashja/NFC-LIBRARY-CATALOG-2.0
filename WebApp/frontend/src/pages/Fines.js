@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { 
-    Search, RefreshCw, Send, Phone, MessageCircle, Bot, 
-    CreditCard, Ban, Trash2, X, AlertCircle, CheckCircle2, 
+import {
+    Search, RefreshCw, Send, Phone, MessageCircle, MessageSquare, Bot,
+    CreditCard, Ban, Trash2, X, AlertCircle, CheckCircle2,
     BookOpen, User, ToggleLeft, ToggleRight, Loader2
 } from 'lucide-react';
 import { api } from '../api';
@@ -458,6 +458,9 @@ const styles = `
   /* Specific Button Colors */
   .fn-icon-btn.whatsapp { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
   .fn-icon-btn.whatsapp:hover { background: #dcfce7; border-color: #86efac; }
+
+  .fn-icon-btn.sms { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+  .fn-icon-btn.sms:hover { background: #dbeafe; border-color: #93c5fd; }
   
   .fn-icon-btn.voice { color: #0284c7; border-color: #bae6fd; background: #f0f9ff; }
   .fn-icon-btn.voice:hover { background: #e0f2fe; border-color: #7dd3fc; }
@@ -626,7 +629,9 @@ const styles = `
 
 const channelOptions = [
     { value: 'preferred', label: 'Use Preferred Channel' },
+    { value: 'sms', label: 'Force SMS' },
     { value: 'whatsapp', label: 'Force WhatsApp' },
+    { value: 'both', label: 'Force SMS + WhatsApp' },
     { value: 'voice', label: 'Force Voice' },
 ];
 
@@ -859,7 +864,7 @@ export default function Fines() {
                         </select>
 
                         <button className="fn-btn" onClick={toggleSelectAll}>
-                            {allSelected ? <CheckCircle2 size={16}/> : <CheckCircle2 size={16} color="#94a3b8"/>}
+                            {allSelected ? <CheckCircle2 size={16} /> : <CheckCircle2 size={16} color="#94a3b8" />}
                             {allSelected ? 'Unselect All' : 'Select All'}
                         </button>
 
@@ -868,10 +873,10 @@ export default function Fines() {
                             disabled={sending || selectedRollNos.length === 0}
                             onClick={() => sendNotify({ rollNos: selectedRollNos, selectAll: false })}
                         >
-                            {sending ? <Loader2 size={16} className="lucide-spin"/> : <Send size={16}/>}
+                            {sending ? <Loader2 size={16} className="lucide-spin" /> : <Send size={16} />}
                             Notify Selected
                         </button>
-                        
+
                         <button className="fn-btn" onClick={recalculate} title="Recalculate all fines">
                             <RefreshCw size={16} />
                         </button>
@@ -903,7 +908,7 @@ export default function Fines() {
                             const isSelected = Boolean(selected[account.roll_no]);
                             return (
                                 <article className={`fn-card ${isSelected ? 'selected' : ''}`} key={account.roll_no}>
-                                    
+
                                     {/* Card Header (User Info & Total) */}
                                     <div className="fn-card-head">
                                         <div className="fn-card-head-left">
@@ -940,7 +945,9 @@ export default function Fines() {
                                                     value={account.preferred_channel || 'whatsapp'}
                                                     onChange={(e) => updatePreference(account.roll_no, { preferred_channel: e.target.value })}
                                                 >
+                                                    <option value="sms">SMS</option>
                                                     <option value="whatsapp">WhatsApp</option>
+                                                    <option value="both">SMS + WhatsApp</option>
                                                     <option value="voice">Voice Call</option>
                                                 </select>
 
@@ -966,12 +973,12 @@ export default function Fines() {
                                                     </div>
                                                     <span className="fn-tag over">{book.overdue_days || 0}d Overdue</span>
                                                     <span className="fn-tag fine">Rs. {book.fine || 0}</span>
-                                                    <div className="fn-meta" style={{marginTop: 0}}>
+                                                    <div className="fn-meta" style={{ marginTop: 0 }}>
                                                         Due: {book.due_date ? new Date(book.due_date).toLocaleDateString() : 'N/A'}
                                                     </div>
-                                                    <button 
-                                                        className="fn-icon-btn waive" 
-                                                        title="Waive fine for this specific book" 
+                                                    <button
+                                                        className="fn-icon-btn waive"
+                                                        title="Waive fine for this specific book"
                                                         onClick={() => waiveFine({ rollNo: account.roll_no, bookId: book.book_id })}
                                                     >
                                                         <Ban /> <span>Waive</span>
@@ -986,8 +993,11 @@ export default function Fines() {
                                         <div className="fn-pay-mode">
                                             Gateway: {(account.payment_mode || 'Standard UPI').toUpperCase()}
                                         </div>
-                                        
+
                                         <div className="fn-action-group">
+                                            <button className="fn-icon-btn sms" title="Send SMS Reminder" onClick={() => sendNotify({ rollNos: [account.roll_no], forceChannel: 'sms' })}>
+                                                <MessageSquare /> <span>SMS</span>
+                                            </button>
                                             <button className="fn-icon-btn whatsapp" title="Send WhatsApp Reminder" onClick={() => sendNotify({ rollNos: [account.roll_no], forceChannel: 'whatsapp' })}>
                                                 <MessageCircle /> <span>WhatsApp</span>
                                             </button>
@@ -1024,12 +1034,12 @@ export default function Fines() {
                                 </button>
                             </div>
                             <div className="fn-modal-body">
-                                <div className="fn-meta" style={{marginBottom: '16px'}}>
+                                <div className="fn-meta" style={{ marginBottom: '16px' }}>
                                     Generating for <strong>{aiDialog.accountName}</strong> via <strong>{aiDialog.channel.toUpperCase()}</strong> format.
                                 </div>
                                 <div className="fn-modal-message">
                                     {aiDialog.loading ? (
-                                        <span style={{display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b'}}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b' }}>
                                             <Loader2 size={16} className="lucide-spin" /> Generating response...
                                         </span>
                                     ) : aiDialog.text}

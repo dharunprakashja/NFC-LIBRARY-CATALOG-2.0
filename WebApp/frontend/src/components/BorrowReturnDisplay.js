@@ -60,6 +60,26 @@ const styles = `
     display: flex; align-items: center; gap: 7px;
   }
   .br-card-title svg { width: 14px; height: 14px; color: #1a1a2e; }
+  .br-device-pill {
+    margin-left: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .br-device-pill.connected {
+    background: #ecfdf3;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+  .br-device-pill.disconnected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
 
   .br-action-badge {
     font-size: 11px; font-weight: 700; padding: 4px 13px;
@@ -360,6 +380,10 @@ export default function BorrowReturnDisplay() {
   const [scanError, setScanError] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [bookDevice, setBookDevice] = useState({
+    connected: false,
+    port: 'COM10',
+  });
   const abortRef = useRef(null);
   const mountedRef = useRef(true);
   const location = useLocation();
@@ -512,6 +536,22 @@ export default function BorrowReturnDisplay() {
       setMessage(data.message || "");
     });
 
+    socket.on('deviceStatus', (status) => {
+      if (status?.book) {
+        setBookDevice(status.book);
+      }
+    });
+
+    api.get('/device-status')
+      .then((res) => {
+        if (res?.data?.book) {
+          setBookDevice(res.data.book);
+        }
+      })
+      .catch(() => {
+        // Live socket updates will still refresh status.
+      });
+
     const initialize = async () => {
       try {
         await api.post("/library/select-action", { action: sessionAction });
@@ -530,6 +570,7 @@ export default function BorrowReturnDisplay() {
     return () => {
       mountedRef.current = false;
       socket.off("nfcDataReceived");
+      socket.off('deviceStatus');
       stopNfcScan();
     };
   }, []);
@@ -558,7 +599,12 @@ export default function BorrowReturnDisplay() {
 
         <div className="br-card">
           <div className="br-card-header">
-            <div className="br-card-title"><LibraryIcon /> Library Session</div>
+            <div className="br-card-title">
+              <LibraryIcon /> Library Session
+              <span className={`br-device-pill ${bookDevice.connected ? 'connected' : 'disconnected'}`}>
+                Book Device {bookDevice.connected ? 'Connected' : 'Disconnected'} ({bookDevice.port || 'N/A'})
+              </span>
+            </div>
             {action && (
               <span className={`br-action-badge ${action}`}>
                 {action === "borrow" ? "Borrowing" : "Returning"}

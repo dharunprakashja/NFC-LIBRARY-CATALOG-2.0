@@ -87,14 +87,43 @@ const serializeAccountFine = (account, req) => {
 const buildFallbackMessage = ({ account, channel, paymentLink }) => {
     const overdueBooks = (account.borrowed_books || [])
         .filter((b) => b.fine > 0)
-        .map((b) => `${b.title || b.book_id} (fine Rs.${b.fine})`)
-        .join(', ');
+        .map((b) => `${b.title || b.book_id} (Rs.${b.fine})`);
 
-    const opening = channel === 'voice'
-        ? `Hello ${account.name}. This is your library fine reminder.`
-        : `Hi ${account.name}, library fine reminder:`;
+    const bookLines = overdueBooks.length
+        ? overdueBooks.map((title) => `  - ${title}`).join('\n')
+        : '  - None';
 
-    return `${opening} Your outstanding fine is Rs.${account.total_fine}. Overdue books: ${overdueBooks || 'none'}. Please pay here: ${paymentLink}`;
+    if (channel === 'voice') {
+        return `Hello ${account.name}. This is your library fine reminder. Outstanding fine is Rs.${account.total_fine}. Please pay using this link: ${paymentLink}`;
+    }
+
+    return [
+        'LIBRARY FINE REMINDER',
+        '---------------------',
+        `- Name: ${account.name}`,
+        `- Roll No: ${account.roll_no}`,
+        `- Outstanding Fine: Rs.${account.total_fine}`,
+        '- Overdue Books:',
+        bookLines,
+        `- Payment Link: ${paymentLink}`,
+    ].join('\n');
+};
+
+const buildVoiceCallMessage = (account) => {
+    const overdueBookNames = (account.borrowed_books || [])
+        .filter((b) => (b.fine || 0) > 0)
+        .map((b) => b.title || b.book_id)
+        .filter(Boolean);
+
+    const booksPart = overdueBookNames.length
+        ? `the book ${overdueBookNames.join(', ')}`
+        : 'the overdue book';
+
+    return [
+        `Hi ${account.name}.`,
+        `Your total fine amount is Rupees ${account.total_fine}.`,
+        `Please pay the fine and return ${booksPart} to the library.`,
+    ].join(' ');
 };
 
 const generateAiMessage = async ({ account, channel, paymentLink }) => {
@@ -141,6 +170,19 @@ const getTwilioClient = () => {
     return twilio(sid, token);
 };
 
+const escapeXml = (value = '') => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+const toVoiceFriendlyText = (value = '') => String(value)
+    .replace(/\n+/g, '. ')
+    .replace(/[-]{2,}/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 const dispatchByChannel = async ({ mobile, channel, text }) => {
     const normalizedMobile = normalizeMobile(mobile);
 
@@ -170,10 +212,63 @@ const dispatchByChannel = async ({ mobile, channel, text }) => {
     }
 
     if (channel === 'voice') {
+        const client = getTwilioClient();
+        const voiceFrom = process.env.TWILIO_VOICE_FROM || process.env.TWILIO_FROM_PHONE;
+        if (!client || !voiceFrom) {
+            return { sent: false, channel, detail: 'Voice gateway not configured. Set TWILIO_VOICE_FROM or TWILIO_FROM_PHONE.' };
+        }
+
+        const voiceBody = toVoiceFriendlyText(text);
+        const twiml = `<Response><Say voice="alice" language="en-IN">${escapeXml(voiceBody)}</Say></Response>`;
+
+        const logPrefix = `[VoiceNotify] to=${normalizedMobile} from=${voiceFrom}`;
+        console.log(`${logPrefix} Initiating Twilio voice call`);
+
+        try {
+            const response = await client.calls.create({
+                from: voiceFrom,
+                to: normalizedMobile,
+                twiml,
+            });
+
+            console.log(`${logPrefix} Queued successfully. SID=${response?.sid || 'N/A'} status=${response?.status || 'N/A'}`);
+            return { sent: true, channel, detail: `Voice call queued. SID: ${response?.sid || 'N/A'}` };
+        } catch (error) {
+            console.error(`${logPrefix} Failed`, {
+                code: error?.code,
+                status: error?.status,
+                message: error?.message,
+                moreInfo: error?.moreInfo,
+            });
+
+            const detail = error?.code
+                ? `Voice call failed (${error.code}): ${error.message}`
+                : `Voice call failed: ${error?.message || 'Unknown error'}`;
+
+            return { sent: false, channel, detail };
+        }
+    }
+
+    if (channel === 'both') {
+        let sms;
+        let whatsapp;
+
+        try {
+            sms = await dispatchByChannel({ mobile, channel: 'sms', text });
+        } catch (error) {
+            sms = { sent: false, detail: error.message || 'SMS failed.' };
+        }
+
+        try {
+            whatsapp = await dispatchByChannel({ mobile, channel: 'whatsapp', text });
+        } catch (error) {
+            whatsapp = { sent: false, detail: error.message || 'WhatsApp failed.' };
+        }
+
         return {
-            sent: false,
+            sent: sms.sent || whatsapp.sent,
             channel,
-            detail: 'Voice gateway not configured yet. Configure TWILIO voice flow/NCCO webhook.',
+            detail: `SMS: ${sms.detail} | WhatsApp: ${whatsapp.detail}`,
         };
     }
 
@@ -220,7 +315,7 @@ router.post('/recalculate', async (req, res) => {
 router.put('/preferences/:roll_no', async (req, res) => {
     try {
         const { preferred_channel, automated_enabled } = req.body;
-        const allowed = ['sms', 'whatsapp', 'voice'];
+        const allowed = ['sms', 'whatsapp', 'voice', 'both'];
 
         if (preferred_channel && !allowed.includes(preferred_channel)) {
             return res.status(400).json({ message: 'Invalid preferred channel.' });
@@ -340,9 +435,13 @@ const notifyAccounts = async ({ req, rollNos = [], selectAll = false, forcedChan
             paymentLink: serialized.payment_link,
         });
 
+        const outboundText = channel === 'voice'
+            ? buildVoiceCallMessage(serialized)
+            : text;
+
         let delivery;
         try {
-            delivery = await dispatchByChannel({ mobile: serialized.mobile, channel, text });
+            delivery = await dispatchByChannel({ mobile: serialized.mobile, channel, text: outboundText });
         } catch (error) {
             delivery = { sent: false, channel, detail: error.message };
         }
@@ -353,7 +452,7 @@ const notifyAccounts = async ({ req, rollNos = [], selectAll = false, forcedChan
             channel,
             sent: delivery.sent,
             detail: delivery.detail,
-            message: text,
+            message: outboundText,
         });
     }
 
@@ -387,7 +486,7 @@ router.post('/notify', async (req, res) => {
 
 router.post('/preview', async (req, res) => {
     try {
-        const { roll_no, channel = 'whatsapp' } = req.body;
+        const { roll_no, channel = 'both' } = req.body;
         if (!roll_no) {
             return res.status(400).json({ message: 'roll_no is required.' });
         }

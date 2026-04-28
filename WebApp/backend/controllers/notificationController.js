@@ -67,7 +67,26 @@
 const Student = require('../models/account');
 const calculateFine = require('../services/fineCalculator');
 const sendSMS = require('../services/smsService');
+const sendWhatsApp = require('../services/whatsappService');
 require('dotenv').config();
+
+function buildStructuredFineMessage(student, booksToReturn) {
+  const bookLines = booksToReturn.length
+    ? booksToReturn.map((title) => `  - ${title}`).join('\n')
+    : '  - None';
+
+  return [
+    'LIBRARY FINE ALERT',
+    '------------------',
+    `- Name: ${student.name}`,
+    `- Roll No: ${student.roll_no}`,
+    `- Department: ${student.department}`,
+    `- Outstanding Fine: Rs.${student.total_fine}`,
+    '- Overdue Books:',
+    bookLines,
+    '- Please return overdue books and clear fine soon.',
+  ].join('\n');
+}
 
 async function sendNotifications() {
   try {
@@ -113,8 +132,8 @@ async function sendNotifications() {
       await student.save();
 
       if (hasFine || booksToReturn.length > 0) {
-        const message = `Notice: You have an outstanding fine of ₹${student.total_fine}. Please return the following overdue books immediately: ${booksToReturn.join(', ')}.`;
-        console.log(`Sending SMS to ${student.name} (${student.mobile}): ${message}`);
+        const message = buildStructuredFineMessage(student, booksToReturn);
+        console.log(`Sending SMS + WhatsApp to ${student.name} (${student.mobile})`);
 
         // Send SMS using Twilio
         try {
@@ -122,6 +141,14 @@ async function sendNotifications() {
           console.log(`SMS sent to ${student.name} (${student.mobile}).`);
         } catch (twilioError) {
           console.error(`Failed to send SMS to ${student.name} (${student.mobile}):`, twilioError);
+        }
+
+        // Send WhatsApp using Twilio WhatsApp
+        try {
+          await sendWhatsApp(student.mobile, message);
+          console.log(`WhatsApp sent to ${student.name} (${student.mobile}).`);
+        } catch (twilioError) {
+          console.error(`Failed to send WhatsApp to ${student.name} (${student.mobile}):`, twilioError);
         }
       } else {
         console.log(`No fine or overdue books for ${student.name} (${student.mobile}).`);

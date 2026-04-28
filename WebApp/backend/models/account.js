@@ -28,7 +28,7 @@ const accountSchema = new mongoose.Schema({
   notification_settings: {
     preferred_channel: {
       type: String,
-      enum: ['sms', 'whatsapp', 'voice'],
+      enum: ['sms', 'whatsapp', 'voice', 'both'],
       default: 'sms',
     },
     automated_enabled: {
